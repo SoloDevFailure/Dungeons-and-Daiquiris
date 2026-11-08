@@ -1,0 +1,8 @@
+_site/
+node_modules/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+Pillar-Renovations-Website-Handover.md
