@@ -2,12 +2,15 @@
 begin;
 insert into auth.users(id) values ('10000000-0000-4000-8000-000000000001'),('10000000-0000-4000-8000-000000000002');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+-- Seed as the trusted test role; ordinary hosts cannot create more games after migration 002.
+select public.d20_create_session('20000000-0000-4000-8000-000000000001','Test',repeat('a',64),
+  (select jsonb_agg(jsonb_build_object('slot',i,'displayName','Ingredient '||i,'defaultMl',10,'abv',0) order by i) from generate_series(1,20) i));
 set local role authenticated;
-do $$
+do $
 declare config jsonb; state jsonb; snapshot jsonb;
 begin
   select jsonb_agg(jsonb_build_object('slot',i,'displayName','Ingredient '||i,'defaultMl',10,'abv',0) order by i) into config from generate_series(1,20) i;
-  state := public.d20_create_session('20000000-0000-4000-8000-000000000001','Test',repeat('a',64),config);
+  state := public.d20_host_state('20000000-0000-4000-8000-000000000001');
   assert state->>'revision'='0';
   snapshot := jsonb_build_object('id','drink-1','createdAt','2026-11-08T00:00:00Z','bartenderTitle','Test drink','bartenderSummary','Test',
     'rolledIngredients',jsonb_build_array(1,2,3),'finalIngredients',jsonb_build_array(jsonb_build_object('slot',1,'displayName','One','finalMl',10),jsonb_build_object('slot',2,'displayName','Two','finalMl',10),jsonb_build_object('slot',3,'displayName','Three','finalMl',10)),

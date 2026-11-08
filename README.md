@@ -2,6 +2,21 @@
 
 Open `index.html` directly in a modern browser. Offline mode has no runtime dependencies or external requests. Optional session sharing uses the public Supabase configuration in `config.js`. Keep the accompanying scripts and stylesheet with it. It works offline as local files. Browser storage belongs to the browser/profile and origin; clearing browser data also clears local records.
 
+## One permanent game
+
+The original host phone connects automatically to the existing event. Its connection
+indicator is green only after Supabase replies, amber while connecting and red on
+failure. Tap it for an offline-generated read-only QR code and Copy Link button.
+The iPad remembers its pairing, polls every second while visible and keeps its last
+recipe through interruptions. Phone checks run every 30 seconds while idle, with
+immediate uploads and five-second retries. Hidden/suspended pages stop their loops.
+
+Before deploying this update, run only the new additive migration
+`supabase/migrations/202611080002_permanent_game.sql` in Supabase SQL Editor.
+Existing games, encounters, players, settings, history and browser keys are retained.
+Open the original host browser after deployment to bind its existing game automatically.
+See [current database setup](supabase/README.md).
+
 ## GitHub Pages and home-screen installation
 
 The controller is `index.html`; the independent TV/iPad waiting screen is
@@ -74,7 +89,7 @@ The v1 ingredient list migrates to v2 without deleting the original. Each field 
 
 Run the dependency-free engine/repository suite:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs
 
 It covers all 1,140 three-slot combinations at default amounts and again with extreme amounts, plus alcohol maths, preparation constraints, migration, snapshot isolation, storage errors and the inactive API hook.
 
@@ -84,4 +99,4 @@ The optional browser check uses Playwright and installed Chrome:
 
 Install Playwright separately or set `D20_PLAYWRIGHT_PATH` to its module path. `D20_SCREENSHOTS` optionally selects an output folder. It runs offline and checks common phone/desktop viewports, the complete game loop, read-only history, reloads, dirty browser navigation, confirmations and failed storage writes.
 
-Supabase sessions, anonymous host authentication, players and read-only display pairing are implemented but require project configuration. See [Phase 1 setup](supabase/README.md). OpenAI, auctions and scoring remain unimplemented.
+A permanent Supabase game, anonymous host authentication, players and read-only display pairing are implemented. See [Phase 1 setup](supabase/README.md). OpenAI, auctions and scoring remain unimplemented.

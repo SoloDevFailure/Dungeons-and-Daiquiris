@@ -3,13 +3,14 @@ const {chromium}=require(process.env.D20_PLAYWRIGHT_PATH || 'playwright');
 const fs=require('node:fs/promises');
 const path=require('node:path');
 const assert=require('node:assert/strict');
+require('../services/storage.js');require('../services/ingredients.js');
 (async()=>{
   const browser=await chromium.launch({channel:'chrome',headless:true});
   try {
     const context=await browser.newContext({serviceWorkers:'block'});
     const root=path.resolve(__dirname,'..');
     const config="globalThis.D20_CONFIG={supabaseUrl:'https://example.supabase.co',publishableKey:'sb_publishable_test'};";
-    let remote=null,offline=false;const seen=new Set();const errors=[];
+    let remote={id:'20000000-0000-4000-8000-000000000001',name:'Christmas Poker',revision:0,config:D20.ingredients.master,players:[],currentEncounter:null},offline=false;const seen=new Set();const errors=[];
     await context.route('https://game.test/**',async route=>{
       const file=new URL(route.request().url()).pathname.slice(1)||'index.html';
       if(file==='config.js')return route.fulfill({contentType:'text/javascript',body:config});
@@ -20,7 +21,7 @@ const assert=require('node:assert/strict');
       if(offline)return route.abort('internetdisconnected');
       const req=route.request(),url=new URL(req.url()),p=req.postDataJSON();let result;
       if(url.pathname.includes('/auth/'))result={access_token:'host',refresh_token:'refresh',expires_in:3600};
-      else if(url.pathname.endsWith('d20_create_session'))remote=result={id:p.p_id,name:p.p_name,revision:0,config:p.p_config,players:[],currentEncounter:null};
+      else if(url.pathname.endsWith('d20_connect_game'))result={...remote,permanent:true,viewToken:'a'.repeat(64)};
       else if(url.pathname.endsWith('d20_host_state'))result=remote;
       else if(url.pathname.endsWith('d20_presentation')){
         assert.equal(req.headers().authorization,undefined);
@@ -39,8 +40,8 @@ const assert=require('node:assert/strict');
     });
     const phone=await context.newPage();phone.on('pageerror',e=>errors.push(e.message));
     await phone.goto('https://game.test/index.html');
-    await phone.locator('#session-open').click();await phone.locator('#session-create button').click();
-    await phone.waitForFunction(()=>D20.storage.read(D20.sessions.key,null)?.remote);
+    await phone.waitForFunction(()=>D20.storage.read(D20.sessions.key,null)?.permanent);
+    await phone.locator('#session-open').click();await phone.locator('#session-tools summary').click();
     await phone.locator('#player-name').fill('Ryan');await phone.locator('#player-register button').click();
     await phone.waitForFunction(()=>D20.storage.read(D20.sessions.key).remote.players.length===1);
     const link=await phone.locator('#presentation-link').inputValue();

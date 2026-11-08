@@ -69,3 +69,12 @@ dialog p{font-size:14px;line-height:1.5;color:#d1c5aa}
 #session-detail{overflow-wrap:anywhere;font-size:12px}
 @media(max-width:380px){.ledger-head,.ingredient-row{grid-template-columns:22px minmax(0,1fr) 58px 54px;gap:4px}}
 @media(max-height:480px) and (orientation:landscape){#session-open{margin-top:4px}}
+/* Compact connection control replaces the decorative main-screen crest. */
+#session-open.connection-indicator{position:absolute;z-index:5;top:0;left:50%;transform:translateX(-50%);width:44px;height:44px;min-height:44px;margin:0;padding:0;border:1px solid currentColor;border-radius:50%;background:#142018;font:bold 23px/1 system-ui;cursor:pointer;color:#edbf65}
+#session-open[data-connection="connected"]{color:#a5df96;background:#183724}
+#session-open[data-connection="offline"]{color:#ef9b8c;background:#3b2422}
+#presentation-qr{display:flex;justify-content:center;margin:18px 0}
+#presentation-qr svg{display:block;width:min(100%,300px);height:auto;border-radius:4px}
+#session-tools{margin:20px 0;text-align:left}#session-tools summary{cursor:pointer;min-height:44px;padding:12px 0}
+
+.main-header .crest{visibility:hidden}

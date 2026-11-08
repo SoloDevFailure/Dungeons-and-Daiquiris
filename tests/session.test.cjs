@@ -110,3 +110,57 @@ test('failed idle restoration preserves cached session metadata',async()=>{
   offline=true;await assert.rejects(repo.flush(),/offline/);
   assert.equal(mem.data.get(D.sessions.key),before);
 });
+
+test('permanent connection adopts existing game, preserving outbox, ingredients and identity',async()=>{
+  const mem=memory();let n=0;const token='a'.repeat(64),calls=[];
+  const existing={id:'legacy-game',viewToken:token,name:'Poker',revision:3,pending:[{id:'queued',kind:'player',payload:{id:'ryan',name:'Ryan'}}],creating:false,remote:{players:[]}};
+  mem.storage.write(D.sessions.key,existing);mem.storage.write(D.ingredients.key,[{custom:'unchanged'}]);mem.storage.write('host-identity',{refresh_token:'never-share'});
+  const client={rpc:async(name,p)=>{calls.push({name,p});return {id:existing.id,name:'Christmas Poker',revision:5,players:[{id:'ryan',name:'Ryan'}],viewToken:token,permanent:true}}};
+  const repo=D.sessions.createRepository(client,mem.storage,()=>`id-${++n}`);
+  const state=await repo.connectPermanent();
+  assert.equal(state.id,existing.id);assert.equal(state.permanent,true);assert.equal(state.revision,3);
+  assert.deepEqual(state.pending,existing.pending);assert.equal(calls[0].name,'d20_connect_game');
+  assert.deepEqual(calls[0].p,{p_existing:existing.id,p_view_token:token});
+  assert.deepEqual(mem.storage.read(D.ingredients.key),[{custom:'unchanged'}]);assert.equal(mem.storage.read('host-identity').refresh_token,'never-share');
+});
+
+test('permanent restoration without local game metadata recovers the same game, not a new session',async()=>{
+  const mem=memory();const calls=[];
+  const client={rpc:async(name,p)=>{calls.push({name,p});return {id:'permanent',name:'Poker',revision:7,viewToken:'b'.repeat(64),permanent:true}}};
+  const repo=D.sessions.createRepository(client,mem.storage,()=>{throw Error('must not generate game IDs')});
+  await repo.connectPermanent();await repo.connectPermanent();
+  assert.equal(repo.get().id,'permanent');assert.deepEqual(repo.get().pending,[]);
+  assert.ok(calls.every(c=>c.name==='d20_connect_game'));
+  assert.deepEqual(calls[0].p,{p_existing:null,p_view_token:null});
+});
+
+test('a different permanent game or denied host never overwrites saved game metadata',async()=>{
+  const mem=memory();const original={id:'original',viewToken:'a'.repeat(64),pending:[],revision:1};mem.storage.write(D.sessions.key,original);
+  const raw=mem.data.get(D.sessions.key);
+  const repo=D.sessions.createRepository({rpc:async()=>({id:'different',permanent:true,viewToken:'b'.repeat(64)})},mem.storage);
+  await assert.rejects(repo.connectPermanent(),/not been replaced/);assert.equal(mem.data.get(D.sessions.key),raw);
+  const empty=memory();const denied=D.sessions.createRepository({rpc:async()=>{throw Error('original host required')}},empty.storage);
+  await assert.rejects(denied.connectPermanent(),/original host/);assert.equal(empty.storage.read(D.sessions.key,null),null);
+});
+
+test('hiding during outbox upload prevents further RPCs and retains unuploaded changes',async()=>{
+  const mem=memory(),controller=new AbortController();let count=0;
+  const state={id:'existing',viewToken:'a'.repeat(64),revision:1,creating:false,pending:[{id:'one',kind:'clear',payload:{}},{id:'two',kind:'clear',payload:{}}]};
+  mem.storage.write(D.sessions.key,state);
+  const repo=D.sessions.createRepository({rpc:async()=>{count++;controller.abort();return {revision:2}}},mem.storage);
+  await assert.rejects(repo.flush({signal:controller.signal}),error=>error.name==='AbortError');
+  assert.equal(count,1);assert.equal(repo.get().pending.length,1);assert.equal(repo.get().pending[0].id,'two');
+});
+
+test('an already-started auth refresh persists its identity before cancelling the following RPC',async()=>{
+  const mem=memory(),controller=new AbortController();
+  const authKey='dungeons-daiquiris.auth.example.supabase.co';
+  mem.storage.write(authKey,{access_token:'expired',refresh_token:'old-refresh',expires_at:0});
+  let calls=0;
+  const client=D.supabase.createClient(config,mem.storage,async url=>{
+    calls++;assert.match(url,/refresh_token/);controller.abort();
+    return {ok:true,json:async()=>({access_token:'renewed',refresh_token:'rotated',expires_in:3600})};
+  });
+  await assert.rejects(client.rpc('d20_host_state',{},true,{signal:controller.signal}),error=>error.name==='AbortError');
+  assert.equal(calls,1);assert.equal(mem.storage.read(authKey).refresh_token,'rotated');
+});

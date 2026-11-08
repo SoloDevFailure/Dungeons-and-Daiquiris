@@ -40,21 +40,21 @@
     lastRender = signature;
   }
   try { const cached = app.storage.read(cacheKey, null); if (cached) { render(cached); $('#display-status').textContent = 'Showing last saved display. Connecting…'; } } catch { /* network can recover an invalid cache */ }
-  let active = false;
-  async function poll() {
-    if (active || document.hidden) return;
-    active = true;
-    try {
-      const state = await client.rpc('d20_presentation', {p_session:connection.session,p_view_token:connection.view}, false);
+  let lastCached = '';
+  async function poll(options) {
+      const state = await client.rpc('d20_presentation', {p_session:connection.session,p_view_token:connection.view}, false, options);
       render(state);
-      try { app.storage.write(cacheKey, state); } catch { /* live display works with storage full */ }
+      if (JSON.stringify(state) !== lastCached) {
+        try { app.storage.write(cacheKey, state); lastCached=JSON.stringify(state); } catch { /* live display works with storage full */ }
+      }
       $('#display-status').textContent = `Live · last checked ${new Date().toLocaleTimeString()}`;
-    } catch (error) {
-      $('#display-status').textContent = error.status === 403 || error.status === 401 ? 'Display link unavailable. Check the link with the host.' : 'Connection interrupted. Keeping the last display; retrying…';
-    } finally { active = false; }
   }
-  setInterval(() => void poll(), 1000);
-  window.addEventListener('online', () => void poll());
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) void poll(); });
-  void poll();
+  const loop=app.connection.createLoop({
+    run:poll,interval:1000,retry:1000,
+    onState(state,error){
+      if(state==='offline')$('#display-status').textContent=error?.status===403||error?.status===401?'Display link unavailable. Check the link with the host.':'Connection interrupted. Keeping the last display; retrying.';
+      if(state==='paused')$('#display-status').textContent='Display paused while this page is hidden.';
+    },
+  });
+  loop.start();
 })();
