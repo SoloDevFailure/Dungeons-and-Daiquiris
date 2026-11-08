@@ -6,10 +6,11 @@
   try {
     const params = new URLSearchParams(location.hash.slice(1));
     const supplied = {session:params.get('session'),view:params.get('view')};
-    const valid = item => /^[0-9a-f-]{36}$/.test(item?.session || '') && /^[0-9a-f]{64}$/.test(item?.view || '');
+    const valid = item => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(item?.session || '') && /^[0-9a-f]{64}$/.test(item?.view || '');
+    if ((params.has('session') || params.has('view')) && !valid(supplied)) throw new Error('This display link is incomplete or invalid. Copy the full link from the phone.');
     connection = valid(supplied) ? supplied : app.storage.read('dungeons-daiquiris.display-link.v1', null);
     if (!valid(connection)) throw new Error('Open the read-only iPad link from the phone’s Game Session screen.');
-    app.storage.write('dungeons-daiquiris.display-link.v1', connection);
+    try { app.storage.write('dungeons-daiquiris.display-link.v1', connection); } catch { /* A valid URL still works if device storage is unavailable. */ }
     if (!globalThis.D20_CONFIG?.supabaseUrl) throw new Error('Supabase is not configured yet.');
     app.supabase.validateConfig(globalThis.D20_CONFIG);
   } catch (error) { $('#display-status').textContent = error.message; return; }

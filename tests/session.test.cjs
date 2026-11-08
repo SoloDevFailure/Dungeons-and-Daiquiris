@@ -91,3 +91,22 @@ test('display link carries only a read capability in its fragment',()=>{
   assert.ok(!link.href.includes('never-share'));
 });
 
+
+test('idle sync refreshes server session/player state without touching local ingredients',async()=>{
+  const mem=memory();let revision=0;let n=0;
+  mem.storage.write(D.ingredients.key,[{saved:'unchanged'}]);
+  const client={rpc:async(name)=>({revision:revision++,players:name==='d20_host_state'?[{id:'ryan',name:'Ryan'}]:[],config:[]})};
+  const repo=D.sessions.createRepository(client,mem.storage,()=>`id-${++n}`);
+  await repo.create('Poker',D.ingredients.master);await repo.flush();
+  assert.equal(repo.get().remote.players[0].name,'Ryan');assert.equal(repo.get().revision,1);
+  assert.deepEqual(mem.storage.read(D.ingredients.key),[{saved:'unchanged'}]);
+});
+
+test('failed idle restoration preserves cached session metadata',async()=>{
+  const mem=memory();let offline=false;let n=0;
+  const client={rpc:async()=>{if(offline)throw new Error('offline');return {revision:5,players:[{id:'ryan',name:'Ryan'}]}}};
+  const repo=D.sessions.createRepository(client,mem.storage,()=>`id-${++n}`);
+  await repo.create('Poker',D.ingredients.master);const before=mem.data.get(D.sessions.key);
+  offline=true;await assert.rejects(repo.flush(),/offline/);
+  assert.equal(mem.data.get(D.sessions.key),before);
+});

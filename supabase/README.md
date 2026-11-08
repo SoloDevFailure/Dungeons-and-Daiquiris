@@ -103,3 +103,32 @@ preservation independently of a project. `tests/browser-check.cjs` remains the o
 regression check; `tests/cloud-browser-check.cjs` uses a mocked RPC backend for the
 phone/display flow and reconnect behavior. Neither replaces running access tests and
 the acceptance check against the actual Supabase project.
+
+## Current connection and final verification
+
+`config.js` now targets `https://ilsgfyghlnwgjvvbikxa.supabase.co` with the supplied
+publishable key. The service-worker version was advanced to v3 for this release.
+The previous deployed controller lacked Game Session and `config.js` returned 404;
+a new GitHub Pages deployment is required before testing live sharing.
+
+If the schema has not yet been installed, open the Dungeons and Daiquiris project,
+SQL Editor → New query, paste the entire contents of
+`supabase/migrations/202611080001_phase1.sql`, then click Run. This migration creates
+only the four d20 tables and scoped functions; it does not reset ingredients or
+history. Run it once. If Supabase reports a d20 table already exists, do not delete
+anything or rerun piecemeal: run `supabase/verify-deployment.sql` and inspect the
+results instead. This verification file is read-only; all boolean columns should
+be true once the schema is complete. Save/copy any SQL errors exactly as shown.
+
+After the schema exists, `node scripts/verify-supabase.cjs` exercises the configured
+real API: anonymous signup, session creation/restoration, players/config, immutable
+encounter retries, current encounter/clear, read-only display scope, owner isolation
+and raw-table denial. It creates two anonymous test identities and one clearly named
+verification session, leaves that test session for inspection, and never touches
+existing user sessions or local browser data. It requires network access. Do not
+confuse successful unit/mocked tests with successful real-project verification.
+
+Idle host sync now refreshes metadata from Supabase instead of reporting cached
+state as live. It preserves local ingredient edits and history. The viewer can
+also display a valid session URL when iPad storage is unavailable (offline refresh
+still needs working storage and a previously installed service-worker shell).

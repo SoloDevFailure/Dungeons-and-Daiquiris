@@ -27,3 +27,11 @@ test('presentation polls without overlap, retains cached encounter through outag
   document.hidden=true;const count=requests;timers.at(-1)();await settle();assert.equal(requests,count);
 });
 
+
+test('presentation still goes live when device storage cannot be written',async()=>{
+  const elements=new Map();let requests=0;
+  const document={hidden:false,querySelector:s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)},createElement:()=>new Element(),addEventListener:()=>{}};
+  const sandbox={D20:{storage:{read:()=>{throw Error('blocked')},write:()=>{throw Error('blocked')}},drinkHistory:D.drinkHistory,supabase:{validateConfig:()=>{},createClient:()=>({rpc:async()=>{requests++;return {name:'Poker',currentEncounter:null}}})}},D20_CONFIG:{supabaseUrl:'https://example.supabase.co'},document,location:{hash:`#session=10000000-0000-4000-8000-000000000001&view=${'a'.repeat(64)}`},URLSearchParams,Date,setInterval:()=>{},window:{addEventListener:()=>{}}};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../presentation.js'),'utf8'),sandbox);await settle();
+  assert.equal(requests,1);assert.match(elements.get('#display-status').textContent,/Live/);
+});

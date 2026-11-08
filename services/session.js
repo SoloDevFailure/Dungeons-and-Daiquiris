@@ -48,7 +48,9 @@
             latest.revision = remote.revision; latest.remote = remote;
             write(latest);
           }
-          return read();
+          // Refresh session metadata even when there was no queued work.
+          // Shared settings remain a separate, explicit import on the controller.
+          return this.restore();
         };
         flushing = globalThis.navigator?.locks ? navigator.locks.request('d20-session-sync', run) : run();
         try { return await flushing; } finally { flushing = null; }
