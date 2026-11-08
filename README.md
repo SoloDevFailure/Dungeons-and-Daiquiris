@@ -1,11 +1,11 @@
 # Dungeons & Daiquiris — local D20 drinks
 
-Open `index.html` directly in a modern browser. The app has no runtime dependencies, external fonts, requests, credentials, or build step. Keep the accompanying scripts and stylesheet with it. It works offline as local files. Browser storage belongs to the browser/profile and origin; clearing browser data also clears local records.
+Open `index.html` directly in a modern browser. Offline mode has no runtime dependencies or external requests. Optional session sharing uses the public Supabase configuration in `config.js`. Keep the accompanying scripts and stylesheet with it. It works offline as local files. Browser storage belongs to the browser/profile and origin; clearing browser data also clears local records.
 
 ## GitHub Pages and home-screen installation
 
 The controller is `index.html`; the independent TV/iPad waiting screen is
-`presentation.html`. The presentation has no controller connection yet.
+`presentation.html`. The presentation connects through the optional Supabase session link.
 Both use relative asset paths for deployment beneath `/Dungeons-and-Daiquiris/`.
 
 In repository Settings > Pages, select **GitHub Actions** as the source.
@@ -39,11 +39,11 @@ clear the original browser data. Cross-origin transfer/sync is not implemented.
 
 Select exactly three numbers, toggling any selection before confirmation. Confirm generates and saves the drink atomically before presenting it. Back preserves the sealed roll; View Your Drink reopens it. Pour Next Drink requires confirmation and saves the snapshot before resetting. An active drink also survives reloads.
 
-Options edits names and requested amounts. Save returns to the main screen. Both the in-app Back and browser Back protect unsaved edits. History is newest first; entries reopen read-only snapshots. Clear History requires confirmation, retains any active drink, and that active drink is archived again when Pour Next Drink completes.
+Options edits names, requested amounts and ABV. Save returns to the main screen. Both the in-app Back and browser Back protect unsaved edits. History is newest first; entries reopen read-only snapshots. Clear History requires confirmation, retains any active drink, and that active drink is archived again when Pour Next Drink completes.
 
 ## Modules
 
-- `services/ingredients.js`: frozen master definitions, editable configuration repository and legacy migration. Only display names and requested mL are editable. ABV, product references, classifications and generator caps remain separate.
+- `services/ingredients.js`: frozen master definitions, editable configuration repository and legacy migration. Display names, requested mL and ABV are editable. Product references, classifications and generator caps remain fixed.
 - `services/drink-generator.js`: pure recipe rules. `D20.drinkGenerator.generateDrink(ingredients, { id, createdAt })` creates a serialisable result; passing identity/time makes the entire output reproducible. Without them it supplies a UUID and current timestamp. No network, DOM or persistence dependencies.
 - `services/storage.js`: JSON storage adapter, injectable for tests or a future backend repository.
 - `services/drink-history.js`: versioned snapshot repository. History and the active drink share one storage transaction. Failed writes leave the prior state intact; unreadable history is never silently replaced.
@@ -64,17 +64,17 @@ A spirit-heavy drink gets up to 15–30 mL chilled water; overproof alongside an
 
 Preparation rules detect carbonation from metadata or tags, prohibit shaking carbonated mixtures, identify dairy/acid conflicts, avoid shaking wine, pour carbonation near the end, and add hot sauce last. Only chilled water and ice may be introduced by the generator.
 
-ABVs are the approximate Australian/reference values supplied in the brief, not live product lookups. Renaming a slot does not identify a new product or infer its ABV. Stored brands/products remain reference metadata. A later advanced ingredient-management feature can explicitly handle changes to those classifications.
+ABVs are the approximate Australian/reference values supplied in the brief, not live product lookups. Renaming a slot does not identify a new product or infer its ABV; edit ABV explicitly. Stored brands/products remain reference metadata. A later advanced ingredient-management feature can explicitly handle changes to those classifications.
 
 ## Existing settings
 
-The v1 ingredient list migrates to v2 without deleting the original. Each field matching its old default adopts the new default; differently named or quantified fields are preserved. Matching old defaults cannot be distinguished from a user intentionally saving the same value. New settings store only editable fields, so saved configuration cannot override generator metadata.
+The v1 ingredient list migrates to v2 without deleting the original. Each field matching its old default adopts the new default; differently named or quantified fields are preserved. Matching old defaults cannot be distinguished from a user intentionally saving the same value. New settings store names, requested mL and optional ABV. Existing v2 records without ABV use reference values without rewriting those records. Fixed generator metadata remains protected.
 
 ## Verification
 
 Run the dependency-free engine/repository suite:
 
-    node --test tests/generator.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs
 
 It covers all 1,140 three-slot combinations at default amounts and again with extreme amounts, plus alcohol maths, preparation constraints, migration, snapshot isolation, storage errors and the inactive API hook.
 
@@ -84,4 +84,4 @@ The optional browser check uses Playwright and installed Chrome:
 
 Install Playwright separately or set `D20_PLAYWRIGHT_PATH` to its module path. `D20_SCREENSHOTS` optionally selects an output folder. It runs offline and checks common phone/desktop viewports, the complete game loop, read-only history, reloads, dirty browser navigation, confirmations and failed storage writes.
 
-No Supabase, OpenAI connection, authentication or TV pairing is implemented.
+Supabase sessions, anonymous host authentication, players and read-only display pairing are implemented but require project configuration. See [Phase 1 setup](supabase/README.md). OpenAI, auctions and scoring remain unimplemented.

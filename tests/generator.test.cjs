@@ -90,13 +90,13 @@ test('all combinations of extreme defaults still satisfy invariants', () => {
     assert.ok(r.finalIngredients.every(i=>i.finalMl>0 && i.finalMl<=i.maxGeneratorMl));
   }
 });
-test('editable config cannot override metadata, and old defaults migrate per field', () => {
+test('editable ABV persists, fixed caps stay protected, and old defaults migrate per field', () => {
   const mem=memory(); const repo=D.ingredients.createRepository(mem.storage);
   const edited=repo.getAll(); edited[8].defaultMl=999; edited[8].abv=0; edited[8].maxGeneratorMl=999;
   repo.save(edited);
   const reloaded=D.ingredients.createRepository(mem.storage);
   assert.equal(reloaded.getById(9).defaultMl,999);
-  assert.equal(reloaded.getById(9).abv,75.5);
+  assert.equal(reloaded.getById(9).abv,0);
   assert.equal(reloaded.getById(9).maxGeneratorMl,15);
   const legacy=[['Coke',100],['Lemonade',100],['Peroni',100],['Great Northern',100],['XXXX Gold',100],['Cider',100],['Vodka',30],['Gin',30],['White Rum',30],['Tequila',30],['Bourbon',30],["Custom whiskey",45],['Spiced Rum',30],['Red Wine',60],['Baileys',30],['Guinness',100],['Worcestershire Sauce',15],['Lime Juice',20],['Tomato Sauce',15],['Hot Sauce',10]].map(([name,amountMl],i)=>({id:i+1,name,amountMl}));
   const old=memory(); old.storage.write('dungeons-daiquiris.ingredients.v1',legacy);

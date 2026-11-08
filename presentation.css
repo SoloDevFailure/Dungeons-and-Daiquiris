@@ -12,3 +12,11 @@ h2{font:400 clamp(23px,3.2vw,42px)/1.3 Georgia,serif;margin:24px 0}
 .description{font:italic clamp(17px,2.1vw,26px)/1.5 Georgia,serif;color:#d1c5aa}
 .status{font-size:clamp(12px,1.4vw,17px);line-height:1.6;color:#b9ab8d;margin:36px auto 0;max-width:650px}
 @media(max-height:500px){.sigil{width:50px;height:50px;font-size:20px;margin-bottom:16px}.rule{margin:18px auto}h1{margin:12px 0}h2{margin:16px 0}.status{margin-top:18px}}
+[hidden]{display:none!important}
+#encounter{max-width:900px;margin:auto;text-align:left;overflow-wrap:anywhere}
+#drink-title{text-align:center;color:#e0c992;font-size:clamp(28px,4vw,54px)}
+#drink-summary{text-align:center;font:italic 22px/1.4 Georgia,serif}
+#display-ingredients{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+#display-ingredients li{padding:16px;border:1px solid #86744a80;border-radius:8px;font-size:22px}
+#display-stats{text-align:center;color:#e0c992}#display-steps{font-size:18px;line-height:1.6}
+#display-warnings{color:#e1c2a3;font-size:16px;line-height:1.6}

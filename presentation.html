@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#101512">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,6 +12,11 @@
   <link rel="manifest" href="presentation.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="presentation.css">
+  <script src="config.js" defer></script>
+  <script src="services/storage.js" defer></script>
+  <script src="services/drink-history.js" defer></script>
+  <script src="services/supabase.js" defer></script>
+  <script src="presentation.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
 <body>
@@ -19,9 +25,15 @@
     <p class="eyebrow">THE TAVERN IS OPEN</p>
     <h1>Dungeons <span>&amp;</span> Daiquiris</h1>
     <div class="rule" aria-hidden="true"></div>
-    <h2>Waiting for the first abomination</h2>
-    <p class="description">Three rolls. One glass. Questionable decisions.</p>
-    <p class="status" role="status">Presentation screen ready. Controller connection is coming in the next update.</p>
+    <p id="session-label" class="eyebrow"></p>
+    <h2 id="waiting">Waiting for the first abomination</h2>
+    <p class="description">Three rolls. Two servings. Questionable decisions.</p>
+    <article id="encounter" hidden>
+      <h2 id="drink-title"></h2><p id="drink-summary"></p>
+      <ul id="display-ingredients"></ul><p id="display-stats"></p>
+      <ol id="display-steps"></ol><div id="display-warnings"></div>
+    </article>
+    <p id="display-status" class="status" role="status">Waiting for a session link.</p>
   </main>
 </body>
 </html>

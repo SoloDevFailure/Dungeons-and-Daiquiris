@@ -16,6 +16,10 @@
   <script src="services/drink-generator.js" defer></script>
   <script src="services/drink-history.js" defer></script>
   <script src="services/ai-service.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="services/supabase.js" defer></script>
+  <script src="services/session.js" defer></script>
+  <script src="session-ui.js" defer></script>
   <script src="app.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
@@ -27,6 +31,7 @@
       <div class="crest" aria-hidden="true"><span>✦</span></div>
       <h1 id="main-title" tabindex="-1">DUNGEONS <span>&amp;</span> DAIQUIRIS</h1>
       <p class="subtitle">Choose Your Ingredients</p>
+      <button id="session-open" class="small-button" type="button">GAME SESSION</button>
     </header>
     <section class="selection" aria-label="Ingredient numbers">
       <div class="selection-heading"><span>THE ALCHEMIST’S CHOICE</span><span id="count">0 / 3</span></div>
@@ -45,7 +50,7 @@
       <p class="subtitle">Twenty numbers. Your own concoction.</p>
     </header>
     <form id="ingredient-form" class="ingredient-form">
-      <div class="ledger-head" aria-hidden="true"><span>D20</span><span>Ingredient name</span><span>Amount (mL)</span></div>
+      <div class="ledger-head" aria-hidden="true"><span>D20</span><span>Ingredient name</span><span>mL</span><span>ABV %</span></div>
       <div id="ingredient-rows" class="ingredient-rows"></div>
       <footer class="editor-footer">
         <p id="editor-status" role="status" aria-live="polite">Edit your ingredients, then save.</p>
@@ -70,6 +75,23 @@
     <article id="result-content" class="scroll-content"></article>
     <footer><p id="result-status" role="status" aria-live="polite"></p><button id="pour-next" class="confirm" type="button">POUR NEXT DRINK</button></footer>
   </section>
+  <dialog id="session-dialog" aria-labelledby="session-title">
+    <h2 id="session-title">Game session</h2>
+    <p id="cloud-status" role="status" aria-live="polite">Offline mode. Local drinks and settings stay on this device.</p>
+    <form id="session-create"><label>Session name<input id="session-name" maxlength="100" required value="Christmas Poker — 5 December 2026"></label><button class="small-button" type="submit">CREATE SESSION</button></form>
+    <button id="session-restore" class="small-button" type="button">RESTORE / REVIEW SESSION</button>
+    <p id="session-detail"></p>
+    <label>Read-only iPad link<input id="presentation-link" readonly aria-label="Read-only iPad link"></label>
+    <p>Copy this link to the iPad. Anyone with it can view this session, but cannot edit it.</p>
+    <button id="session-use-config" class="small-button" type="button">USE SESSION INGREDIENTS</button>
+    <button id="session-publish-config" class="small-button" type="button">PUBLISH DEVICE INGREDIENTS</button>
+    <button id="session-publish-drink" class="small-button" type="button">PUBLISH CURRENT DRINK / WAITING SCREEN</button>
+    <button id="session-use-drink" class="small-button" type="button">RESTORE CURRENT DRINK</button>
+    <form id="player-register"><label>Player name<input id="player-name" required maxlength="80"></label><button class="small-button" type="submit">REGISTER PLAYER</button></form>
+    <ul id="session-players"></ul>
+    <button id="session-retry" class="small-button" type="button">RETRY SYNC</button>
+    <button id="session-close" class="small-button" type="button">CLOSE</button>
+  </dialog>
   <dialog id="confirmation-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
     <h2 id="dialog-title"></h2><p id="dialog-description"></p>
     <div class="dialog-actions"><button id="dialog-cancel" class="small-button" type="button" autofocus>CANCEL</button><button id="dialog-confirm" class="small-button danger-button" type="button"></button></div>

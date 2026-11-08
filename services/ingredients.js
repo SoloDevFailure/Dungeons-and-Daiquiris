@@ -42,12 +42,13 @@
     ['Vodka',30],['Gin',30],['White Rum',30],['Tequila',30],['Bourbon',30],['Whiskey',30],['Spiced Rum',30],
     ['Red Wine',60],['Baileys',30],['Guinness',100],['Worcestershire Sauce',15],['Lime Juice',20],['Tomato Sauce',15],['Hot Sauce',10],
   ];
-  const editable = item => ({ slot: item.slot, displayName: item.displayName, defaultMl: item.defaultMl });
+  const editable = item => ({ slot: item.slot, displayName: item.displayName, defaultMl: item.defaultMl, abv: item.abv ?? master[item.slot - 1].abv });
   function validConfig(items) {
     return Array.isArray(items) && items.length === 20 && items.every((item, index) =>
       item && item.slot === index + 1 && typeof item.displayName === 'string' &&
       item.displayName.trim().length > 0 && item.displayName.length <= 100 &&
-      Number.isFinite(item.defaultMl) && item.defaultMl >= 0);
+      Number.isFinite(item.defaultMl) && item.defaultMl >= 0 &&
+      (item.abv === undefined || (Number.isFinite(item.abv) && item.abv >= 0 && item.abv <= 100)));
   }
   function createIngredientRepository(storage = app.storage) {
     let config = master.map(editable);
@@ -81,8 +82,8 @@
       getById(slot) { return this.getAll().find(item => item.slot === slot) || null; },
       getWarning: () => warning,
       save(items) {
-        if (!validConfig(items)) throw new Error('Enter a name and a non-negative amount for every ingredient.');
-        const next = items.map(item => ({slot:item.slot, displayName:item.displayName.trim(), defaultMl:item.defaultMl}));
+        if (!validConfig(items)) throw new Error('Enter a name and a non-negative amount and ABV from 0 to 100 for every ingredient.');
+        const next = items.map(item => ({...editable(item), displayName:item.displayName.trim()}));
         storage.write(KEY, next);
         config = next;
         warning = '';

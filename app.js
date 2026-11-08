@@ -48,7 +48,7 @@
   $('#dialog-confirm').addEventListener('click', () => settleDialog(true));
   dialog.addEventListener('cancel', event => { event.preventDefault(); settleDialog(false); });
   function draftValues() {
-    return [...rows.children].map(row => ({slot:Number(row.dataset.number), displayName:row.querySelector('.ingredient-name').value, amount:row.querySelector('.ingredient-amount').value}));
+    return [...rows.children].map(row => ({slot:Number(row.dataset.number), displayName:row.querySelector('.ingredient-name').value, amount:row.querySelector('.ingredient-amount').value, abv:row.querySelector('.ingredient-abv').value}));
   }
   function dirty() { return currentRoute.name === 'options' && JSON.stringify(draftValues()) !== editorBaseline; }
   async function allowDiscard() {
@@ -152,6 +152,7 @@
       const result = app.drinkGenerator.generateDrink(selected.map(slot => ingredients.getById(slot)));
       drinks.saveGenerated(result); // Commit history and active result together before locking the UI.
       activeDrink = result;
+      app.cloud?.queue('encounter', result);
       startupWarning = '';
       navigate({name:'result',historical:false});
       void app.aiService.promptAPI(app.clone(result)).catch(() => {
@@ -173,10 +174,13 @@
       const amount = node('input', 'ingredient-amount');
       amount.type = 'number'; amount.inputMode = 'decimal'; amount.min = '0'; amount.step = 'any'; amount.required = true; amount.value = item.defaultMl;
       amount.setAttribute('aria-label', `Ingredient ${item.slot} amount in mL`);
-      row.append(number, name, amount); rows.append(row);
+      const abv = node('input', 'ingredient-abv');
+      abv.type = 'number'; abv.inputMode = 'decimal'; abv.min = '0'; abv.max = '100'; abv.step = 'any'; abv.required = true; abv.value = item.abv;
+      abv.setAttribute('aria-label', `Ingredient ${item.slot} ABV percent`);
+      row.append(number, name, amount, abv); rows.append(row);
     }
     editorBaseline = JSON.stringify(draftValues());
-    $('#editor-status').textContent = ingredients.getWarning() || 'Names and requested pours are editable. Recipe limits still apply.';
+    $('#editor-status').textContent = ingredients.getWarning() || 'Names, pours and ABV are editable. Slot compatibility and recipe limits still apply.';
     rows.scrollTop = 0;
   }
   $('#options').addEventListener('click', () => navigate({name:'options'}));
@@ -193,8 +197,9 @@
     for (const input of rows.querySelectorAll('.ingredient-name')) input.setCustomValidity(input.value.trim() ? '' : 'Enter an ingredient name.');
     if (!form.reportValidity()) return;
     try {
-      ingredients.save(draftValues().map(item => ({slot:item.slot,displayName:item.displayName.trim(),defaultMl:Number(item.amount)})));
+      ingredients.save(draftValues().map(item => ({slot:item.slot,displayName:item.displayName.trim(),defaultMl:Number(item.amount),abv:Number(item.abv)})));
       editorBaseline = JSON.stringify(draftValues());
+      app.cloud?.queue('config', ingredients.getAll());
       void back();
     } catch {
       $('#editor-status').textContent = 'Unable to save on this device. Your edits are still here; please try again.';
@@ -270,8 +275,8 @@
       drink.warnings.forEach(warning => warnings.append(node('p','',warning))); content.append(warnings);
     }
     const notes = resultSection('GENERATOR NOTES');
-    drink.generatorNotes.forEach(note => notes.append(node('p','generator-note',note)));
-    notes.append(node('p','generator-note','Alcohol estimates use the stored reference ABVs. Editing a name does not change its slot’s alcohol or compatibility profile.'));
+    notes.append(node('p','generator-note','Alcohol estimates use the saved ABVs. Renaming a slot does not change its compatibility profile.'));
+    notes.append(node('p','generator-note','Alcohol estimates use the saved ABVs. Renaming a slot does not change its compatibility profile.'));
     content.append(notes);
     $('#pour-next').hidden = Boolean(route.historical);
     content.scrollTop = 0;
@@ -282,6 +287,7 @@
     try {
       drinks.finish(activeDrink); // Ensure the snapshot exists before releasing the current roll.
       activeDrink = null; selected = []; startupWarning = '';
+      app.cloud?.queue('clear', {});
       navigate({name:'main'},true);
     } catch {
       $('#result-status').textContent = 'Could not save the reset. Your current drink is still here. Please try again.';
@@ -292,6 +298,26 @@
     try { drinks.clear(); startupWarning = ''; renderHistory(); }
     catch { $('#history-status').textContent = 'History could not be cleared. Nothing has been removed.'; }
   });
+  app.controller = {
+    getConfig: () => ingredients.getAll(),
+    getActive: () => activeDrink && app.clone(activeDrink),
+    useConfig(config) {
+      if (dirty()) throw new Error('Save or discard your ingredient edits first.');
+      // Keep a recovery copy before an explicitly requested shared-settings import.
+      app.storage.write('dungeons-daiquiris.ingredients.before-session-import', ingredients.getAll());
+      ingredients.save(config);
+      if (currentRoute.name === 'options') renderEditor();
+      if (currentRoute.name === 'main') renderSelection();
+    },
+    useDrink(drink) {
+      if (dirty()) throw new Error('Save or discard your ingredient edits first.');
+      if (!app.drinkHistory.validDrink(drink)) throw new Error('Session recipe is invalid.');
+      if (activeDrink && activeDrink.id !== drink.id) throw new Error('Finish your local drink first. It has not been replaced.');
+      drinks.saveGenerated(drink); activeDrink = app.clone(drink);
+      selected = drink.rolledIngredients.map(item => item.slot);
+      navigate({name:'result',historical:false});
+    },
+  };
   const initialRoute = parseRoute();
   history.replaceState({d20:true,index:0,route:initialRoute}, '', hashFor(initialRoute));
   showRoute(initialRoute);
