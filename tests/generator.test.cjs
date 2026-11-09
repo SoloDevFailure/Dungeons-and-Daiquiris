@@ -16,9 +16,10 @@ test('every default three-slot combination respects volume, alcohol and preparat
   for(let a=1;a<=18;a++) for(let b=a+1;b<=19;b++) for(let c=b+1;c<=20;c++) {
     const result=generate([a,b,c]); checked++;
     assert.equal(result.finalIngredients.length,3);
-    assert.ok(result.totalVolumeMl<=150 && result.totalVolumeMl>=0);
+    assert.ok(result.totalVolumeMl<=90 && result.totalVolumeMl<=result.servingLimitMl && result.totalVolumeMl>=0);
+    assert.ok(result.spiritVolumeMl<=30);assert.ok(D.drinkHistory.validDrink(result));
     for(const item of result.finalIngredients) assert.ok(item.finalMl>0 && item.finalMl<=item.defaultMl && item.finalMl<=item.maxGeneratorMl);
-    const total=result.finalIngredients.reduce((s,i)=>s+i.finalMl,0)+result.generatorAdditions.filter(i=>i.kind==='water').reduce((s,i)=>s+i.finalMl,0);
+    const total=result.finalIngredients.reduce((s,i)=>s+i.finalMl,0)+result.generatorAdditions.filter(i=>i.kind!=='ice').reduce((s,i)=>s+i.finalMl,0);
     assert.ok(Math.abs(total-result.totalVolumeMl)<1e-9);
     const alcohol=result.finalIngredients.reduce((s,i)=>s+i.finalMl*i.abv/100,0);
     assert.equal(alcohol,result.pureAlcoholMl);
@@ -30,28 +31,26 @@ test('every default three-slot combination respects volume, alcohol and preparat
 });
 test('mixer compression precedes spirits and equal-priority reductions are shared', () => {
   const r=generate([12,1,16]);
-  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[30,40,80]);
-  assert.equal(r.totalVolumeMl,150);
+  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[30,1,59]);
+  assert.equal(r.totalVolumeMl,90);
   const beers=generate([3,4,16]);
-  assert.deepEqual(beers.finalIngredients.map(i=>i.finalMl),[50,50,50]);
+  assert.deepEqual(beers.finalIngredients.map(i=>i.finalMl),[30,30,30]);
 });
-test('triple spirits retain all rolls and dilution leaves pure alcohol unchanged', () => {
+test('triple spirits become a 15 mL shot without unconfigured extras', () => {
   const r=generate([7,8,12]);
-  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[30,30,30]);
-  assert.equal(r.generatorAdditions.find(i=>i.kind==='water').finalMl,30);
-  assert.equal(r.totalVolumeMl,120);
-  assert.equal(r.pureAlcoholMl,35.25);
-  assert.equal(r.estimatedAbv,29.375);
-  assert.match(r.warnings.join(' '),/not the amount of alcohol/);
+  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[5,5,5]);
+  assert.equal(r.generatorAdditions.length,0);assert.equal(r.totalVolumeMl,15);
+  assert.equal(r.pureAlcoholMl,5.875);assert.ok(Math.abs(r.estimatedAbv-39.16666666666667)<1e-9);
+  assert.equal(r.batch.totalVolumeMl,30);assert.equal(r.batch.spiritVolumeMl,30);
 });
 test('overproof, condiments and extreme editor values cannot bypass caps', () => {
   const r=generate([9,7,12],{9:{defaultMl:300},7:{defaultMl:900},12:{defaultMl:1e100}});
-  assert.equal(r.finalIngredients[0].finalMl,15);
-  assert.ok(r.totalVolumeMl<=150);
+  assert.ok(r.finalIngredients[0].finalMl<=5);
+  assert.ok(r.totalVolumeMl<=90);
   assert.equal(r.finalIngredients[0].abv,75.5);
   const condiments=generate([17,19,20],{17:{defaultMl:1000},19:{defaultMl:1000},20:{defaultMl:1000}});
-  assert.deepEqual(condiments.finalIngredients.map(i=>i.finalMl),[10,15,5]);
-  assert.equal(condiments.totalVolumeMl,30);
+  assert.deepEqual(condiments.finalIngredients.map(i=>i.finalMl),[1,3,.05]);
+  assert.equal(condiments.totalVolumeMl,4.05);
   assert.equal(condiments.generatorAdditions.some(i=>i.kind==='water'),false);
 });
 test('dairy conflicts, carbonation and high-impact ordering', () => {
@@ -71,9 +70,9 @@ test('zero/fractional pours, no fill-to-target, deterministic output and immutab
   const zero=generate([1,2,3],{1:{defaultMl:0},2:{defaultMl:0},3:{defaultMl:0}});
   assert.equal(zero.totalVolumeMl,0); assert.equal(zero.estimatedAbv,0);
   assert.equal(zero.finalIngredients.length,3);
-  assert.equal(generate([17,18,20]).totalVolumeMl,35);
+  assert.equal(generate([17,18,20]).totalVolumeMl,6.05);
   const fractional=generate([1,3,16],{1:{defaultMl:99.999},3:{defaultMl:99.999},16:{defaultMl:99.999}});
-  assert.ok(fractional.totalVolumeMl<=150);
+  assert.ok(fractional.totalVolumeMl<=90);
   const input=[7,8,9].map(s=>D.clone(master[s-1])); const original=D.clone(input);
   assert.deepEqual(D.drinkGenerator.generateDrink(input,context),D.drinkGenerator.generateDrink(input,context));
   assert.deepEqual(input,original);
@@ -86,7 +85,7 @@ test('all combinations of extreme defaults still satisfy invariants', () => {
   for(let a=1;a<=18;a++) for(let b=a+1;b<=19;b++) for(let c=b+1;c<=20;c++) {
     const edit=Object.fromEntries([a,b,c].map(s=>[s,{defaultMl:99999}]));
     const r=generate([a,b,c],edit);
-    assert.ok(r.totalVolumeMl<=150);
+    assert.ok(r.totalVolumeMl<=90);
     assert.ok(r.finalIngredients.every(i=>i.finalMl>0 && i.finalMl<=i.maxGeneratorMl));
   }
 });
@@ -97,7 +96,7 @@ test('editable ABV persists, fixed caps stay protected, and old defaults migrate
   const reloaded=D.ingredients.createRepository(mem.storage);
   assert.equal(reloaded.getById(9).defaultMl,999);
   assert.equal(reloaded.getById(9).abv,0);
-  assert.equal(reloaded.getById(9).maxGeneratorMl,15);
+  assert.equal(reloaded.getById(9).maxGeneratorMl,5);
   const legacy=[['Coke',100],['Lemonade',100],['Peroni',100],['Great Northern',100],['XXXX Gold',100],['Cider',100],['Vodka',30],['Gin',30],['White Rum',30],['Tequila',30],['Bourbon',30],["Custom whiskey",45],['Spiced Rum',30],['Red Wine',60],['Baileys',30],['Guinness',100],['Worcestershire Sauce',15],['Lime Juice',20],['Tomato Sauce',15],['Hot Sauce',10]].map(([name,amountMl],i)=>({id:i+1,name,amountMl}));
   const old=memory(); old.storage.write('dungeons-daiquiris.ingredients.v1',legacy);
   const migrated=D.ingredients.createRepository(old.storage);

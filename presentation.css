@@ -39,3 +39,4 @@ h1,h2,h3,p,figure,ol,ul{margin:0}h2,h3{font-family:"Palatino Linotype",Palatino,
 @keyframes glass-float{0%,100%{transform:translateY(0) rotate(-.25deg)}50%{transform:translateY(-.45cqw) rotate(.25deg)}}
 @media(prefers-reduced-motion:reduce){.scene,.scene *{animation:none!important;transition:none!important}.drink-art img{will-change:auto}}
 @supports not (width:1cqw){.stage{font-size:1.25vw}.drink-title{font-size:3.55vw}.drink-copy-content{font-size:1.3vw}.welcome-scene{font-size:1.13vw}}
+.display-safety{color:#ffd2b3;font-weight:700;font-size:.85em;line-height:1.35;letter-spacing:.04em}

@@ -69,7 +69,7 @@ const { pathToFileURL } = require('node:url');
     for(const n of [7,8,12]) await num(n).click();
     await click('#confirm'); await visible('#result-screen');
     assert.match(await page.locator('#result-content').textContent(),/Chilled Water — 30 mL/);
-    assert.match(await page.locator('#result-content').textContent(),/135 mL/);
+    assert.match(await page.locator('#result-content').textContent(),/30 mL total/);
     const activeId=await page.evaluate(()=>D20.drinkHistory.createRepository().getActive().id);
     await page.reload(); await visible('#result-screen');
     assert.equal(await page.evaluate(()=>D20.drinkHistory.createRepository().getActive().id),activeId);

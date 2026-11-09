@@ -14,6 +14,7 @@
   <script src="services/storage.js" defer></script>
   <script src="services/ingredients.js" defer></script>
   <script src="services/drink-generator.js" defer></script>
+  <script src="services/serving-settings.js" defer></script>
   <script src="services/drink-history.js" defer></script>
   <script src="services/ai-service.js" defer></script>
   <script src="config.js" defer></script>
@@ -48,6 +49,7 @@
   <section id="editor-screen" class="screen editor-screen" aria-labelledby="editor-title" hidden>
     <header>
       <div class="editor-toolbar"><button id="back" class="small-button" type="button">← BACK</button><span class="selection-heading">THE ALCHEMIST’S LEDGER</span></div>
+      <button id="serving-options" class="small-button" type="button">SERVING SIZES</button>
       <h1 id="editor-title" tabindex="-1">Ingredient List</h1>
       <p class="subtitle">Twenty numbers. Your own concoction.</p>
     </header>
@@ -77,6 +79,24 @@
     <article id="result-content" class="scroll-content"></article>
     <footer><p id="result-status" role="status" aria-live="polite"></p><button id="pour-next" class="confirm" type="button">POUR NEXT DRINK</button></footer>
   </section>
+  <dialog id="serving-dialog" aria-labelledby="serving-title">
+    <h2 id="serving-title">Serving sizes</h2>
+    <p>Limits apply to one serving. Each new recipe also includes a two-serving batch. Existing drinks keep their original amounts.</p>
+    <form id="serving-form">
+      <label>Standard maximum (15–90 mL)<input name="maxServingMl" type="number" min="15" max="90" step="0.01" required></label>
+      <label>Shot target (5–15 mL)<input name="shotMl" type="number" min="5" max="15" step="0.01" required></label>
+      <label>Combined spirits/liqueurs maximum (0–30 mL)<input name="maxSpiritMl" type="number" min="0" max="30" step="0.01" required></label>
+      <label>Other difficult rolls maximum (15–45 mL)<input name="smallServingMl" type="number" min="15" max="45" step="0.01" required></label>
+      <label>Estimated hot-sauce mL per drop<input name="dropMl" type="number" min="0.01" max="0.1" step="0.01" required></label>
+      <label><input name="autoLime" type="checkbox"> Allow small balancing lime additions from slot 18</label>
+      <label><input name="waterAvailable" type="checkbox"> Chilled water is available for optional dilution</label>
+      <label><input name="iceAvailable" type="checkbox"> Ice is available for preparation</label>
+      <p>Automatic lime needs a non-zero, non-alcoholic lime slot. No automatic lime with dairy or existing acidity. Drop volume is an estimate; calibrate for your sauce/dropper.</p>
+      <p id="serving-status" role="status"></p>
+      <button type="submit" class="small-button">SAVE SERVING SIZES</button>
+      <button id="serving-close" type="button" class="small-button">CANCEL</button>
+    </form>
+  </dialog>
   <dialog id="session-dialog" aria-labelledby="session-title">
     <h2 id="session-title">Pair the iPad</h2>
     <p id="cloud-status" role="status" aria-live="polite">Connecting to the game.</p>

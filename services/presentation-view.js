@@ -15,9 +15,10 @@
         'Three rolls. One glass. The tavern accepts no creative responsibility.',
         'Three rolls. Two servings. Questionable decisions.',
       ].includes((drink.bartenderSummary || '').trim())?'':(drink.bartenderSummary || ''),
-      ingredients:drink.finalIngredients.map(item=>({slot:item.slot,name:item.displayName,amount:`${ml(item.finalMl)} mL`})),
+      ingredients:drink.finalIngredients.map(item=>({slot:item.slot,name:item.displayName,amount:item.measurementUnit==='drops'?`${item.drops} ${item.drops===1?'drop':'drops'} (~${ml(item.finalMl)} mL)`:`${ml(item.finalMl)} mL`})),
       additions:drink.generatorAdditions.map(item=>item.kind==='ice'?'Ice':`${item.displayName} — ${ml(item.finalMl)} mL`).join(' · '),
-      stats:`${ml(drink.totalVolumeMl)} mL total · ${drink.estimatedAbv.toFixed(1)}% estimated ABV · ${encounter.servings || 2} servings, split evenly`,
+      stats:drink.quantityBasis==='per_serving'?`${ml(drink.totalVolumeMl)} mL per serving · ${drink.estimatedAbv.toFixed(1)}% estimated ABV · 2 servings / ${ml(drink.batch.totalVolumeMl)} mL batch`:`${ml(drink.totalVolumeMl)} mL total · ${drink.estimatedAbv.toFixed(1)}% estimated ABV · ${encounter.servings || 2} servings, split evenly`,
+      blocked:drink.safety?.status==='blocked',
       method:drink.preparationMethod || '',warnings:drink.warnings.map(String),steps:drink.preparationSteps.map(String),artwork:PLACEHOLDER,
     };
   }
@@ -89,6 +90,7 @@
         $('#display-ingredients').replaceChildren(...rows);
         $('#display-additions').textContent=model.additions?`Bartender's additions: ${model.additions}`:'';
         $('#display-additions').hidden=!model.additions;
+        $('#display-safety').textContent=model.blocked?'DO NOT PREPARE OR SERVE — choose a different roll.':'';$('#display-safety').hidden=!model.blocked;
         $('#display-stats').textContent=model.stats;$('#display-method').textContent=model.method;
         $('#display-warnings').replaceChildren(...model.warnings.map(warning=>line('p','',warning)));
         $('#display-warnings').hidden=!model.warnings.length;

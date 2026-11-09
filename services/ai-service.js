@@ -12,6 +12,8 @@
       totalVolumeMl:drinkResult.totalVolumeMl,
       pureAlcoholMl:drinkResult.pureAlcoholMl,
       estimatedAbv:drinkResult.estimatedAbv,
+      quantityBasis:drinkResult.quantityBasis || 'legacy_recipe',
+      servingPolicy:drinkResult.servingPolicy || null,batch:drinkResult.batch || null,safety:drinkResult.safety || null,
       preparationMethod:drinkResult.preparationMethod,
       preparationSteps:drinkResult.preparationSteps,
       instruction:'The quantities and ingredients have already been determined by the local game engine. Do not change the recipe or increase alcohol or ingredient quantities. Give the drink a creative name, describe how to assemble the exact provided recipe within its preparation constraints, and provide brief humorous bartender commentary. Water and ice do not remove alcohol. Your role is presentation only.',

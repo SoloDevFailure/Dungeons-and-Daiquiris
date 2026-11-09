@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 require('../services/storage.js');require('../services/drink-history.js');require('../services/ingredients.js');require('../services/drink-generator.js');require('../services/presentation-view.js');
 const D=globalThis.D20;
-const state=(id='a',slots=[1,7,12])=>({revision:1,currentEncounter:{id,servings:2,snapshot:D.drinkGenerator.generateDrink(slots.map(n=>D.ingredients.master[n-1]),{id,createdAt:'2026-11-09T00:00:00Z'})}});
+const state=(id='a',slots=[1,7,12])=>({revision:1,currentEncounter:{id,servings:2,snapshot:D.drinkGenerator.generateDrink(slots.map(n=>D.ingredients.master[n-1]),{id,createdAt:'2026-11-09T00:00:00Z',policy:{iceAvailable:true}})}});
 function setup(){const events=[],timers=new Map();let id=0,reduced=false;
  const scene=D.presentationView.createSwitcher({show:model=>events.push(['show',model]),leave:kind=>events.push(['leave',kind]),enter:(kind,animate)=>events.push(['enter',kind,animate]),setTimer:(fn,delay)=>{timers.set(++id,{fn,delay});return id},clearTimer:id=>timers.delete(id),reducedMotion:()=>reduced});
  return {scene,events,timers,reduced:()=>reduced=true,finish:()=>{const [id,timer]=timers.entries().next().value;timers.delete(id);timer.fn()}};
@@ -51,7 +51,7 @@ test('same-encounter commentary updates never replay entrance animations',()=>{
 });
 test('long names and fractional mL remain exact rather than being truncated for the TV',()=>{
  const source=state();source.currentEncounter.snapshot.bartenderTitle='An extremely long title '.repeat(20);
- source.currentEncounter.snapshot.finalIngredients[0].displayName='A'.repeat(100);source.currentEncounter.snapshot.finalIngredients[0].finalMl=0.01;
+ source.currentEncounter.snapshot.finalIngredients[0].displayName='A'.repeat(100);source.currentEncounter.snapshot.schemaVersion=1;source.currentEncounter.snapshot.quantityBasis=undefined;source.currentEncounter.snapshot.finalIngredients[0].finalMl=0.01;
  const model=D.presentationView.modelFor(source);assert.equal(model.title,source.currentEncounter.snapshot.bartenderTitle);assert.equal(model.ingredients[0].name.length,100);assert.equal(model.ingredients[0].amount,'0.01 mL');
 });
 

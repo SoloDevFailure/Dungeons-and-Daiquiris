@@ -69,17 +69,12 @@ The browser uses ordered classic scripts rather than ES module imports so direct
 
 ## Deterministic recipe policy
 
-The liquid ceiling is 150 mL, including added chilled water and excluding unmodelled ice melt. Recipes are never padded to that ceiling. Amounts are calculated in integer hundredths of a mL and only rounded down. Zero requested amounts remain visible as zero-volume rolls.
-
-Each ingredient is first limited to its requested amount and its internal cap. Caps are 15 mL for 151 Rum; 5 mL hot sauce; 10 mL Worcestershire; 20 mL lime; 15 mL tomato sauce; 60 mL for ordinary spirits, Fireball and Baileys; 150 mL for other individual slots. These are fixed game rules, independent of editor values.
-
-If compression is necessary, reduce mixers, then beer/cider/stout, then wine, then other low-ABV components, then remaining ingredients. Equal-priority components share reductions; a positive roll retains at least 0.01 mL. Example: Jack Daniel's 30 + Coke 80 + Guinness 80 becomes 30 + 40 + 80, reflecting the explicit mixer-first rule.
-
-A spirit-heavy drink gets up to 15–30 mL chilled water; overproof alongside another spirit requests 45 mL. Available space limits the addition. Water changes concentration, not pure alcohol. Three spirits remain three spirits. Ingredients are never increased to fill unused capacity.
-
-Preparation rules detect carbonation from metadata or tags, prohibit shaking carbonated mixtures, identify dairy/acid conflicts, avoid shaking wine, pour carbonation near the end, and add hot sauce last. Only chilled water and ice may be introduced by the generator.
-
-ABVs are the approximate Australian/reference values supplied in the brief, not live product lookups. Renaming a slot does not identify a new product or infer its ABV; edit ABV explicitly. Stored brands/products remain reference metadata. A later advanced ingredient-management feature can explicitly handle changes to those classifications.
+New drinks use a 90 mL maximum per serving, a 15 mL shot target and a combined
+30 mL spirit/liqueur cap. Difficult mixtures use smaller portions, hot sauce is
+measured in drops, and optional balancing lime comes only from available inventory.
+Water/ice are opt-in pantry extras. Results include explicit two-serving batch
+quantities and preserve all earlier snapshots unchanged. See [serving rules and
+configuration](SERVING-RULES.md) for limits, blocked rolls and validation details.
 
 ## Existing settings
 

@@ -3,6 +3,7 @@
   const app = globalThis.D20;
   const ingredients = app.ingredients.createRepository();
   const drinks = app.drinkHistory.createRepository();
+  const servingSettings = app.servingSettings.createRepository();
   const $ = selector => document.querySelector(selector);
   const screens = {main:$('#main-screen'), options:$('#editor-screen'), history:$('#history-screen'), result:$('#result-screen')};
   const grid = $('#number-grid');
@@ -109,7 +110,7 @@
   function selectionIngredient(slot) {
     return activeDrink?.finalIngredients.find(item => item.slot === slot) || ingredients.getById(slot);
   }
-  function describe(item) { return `${item.displayName} — ${ml(item.finalMl ?? item.defaultMl)} mL`; }
+  function describe(item) { return item.measurementUnit==='drops' ? `${item.displayName} - ${item.drops} ${item.drops===1?'drop':'drops'} (~${ml(item.finalMl)} mL)` : `${item.displayName} - ${ml(item.finalMl ?? item.defaultMl)} mL`; }
   function renderSelection() {
     const complete = selected.length === 3;
     for (const button of grid.children) {
@@ -149,7 +150,7 @@
     if (activeDrink) { navigate({name:'result',historical:false}); return; }
     if (selected.length !== 3) return;
     try {
-      const result = app.drinkGenerator.generateDrink(selected.map(slot => ingredients.getById(slot)));
+      const result = app.drinkGenerator.generateDrink(selected.map(slot => ingredients.getById(slot)), {inventory:ingredients.getAll(),policy:servingSettings.get()});
       drinks.saveGenerated(result); // Commit history and active result together before locking the UI.
       activeDrink = result;
       app.cloud?.queue('encounter', result);
@@ -245,14 +246,18 @@
     try { drink = route.historical ? drinks.get(route.id) : activeDrink; } catch { /* show a recoverable missing result */ }
     if (!drink) { content.append(node('p','empty-state','This drink is no longer available. Use Back to return to the game.')); return; }
     content.append(node('p','drink-name',drink.bartenderTitle),node('p','bartender-summary',drink.bartenderSummary),node('p','entry-date',date(drink.createdAt)));
-    const recipe = resultSection('THE THREE ROLLS');
+    if(drink.quantityBasis==='per_serving'){
+      content.append(node('p','serving-basis',`PER SERVING · ${drink.servingStyle.toUpperCase()} · ${ml(drink.servingLimitMl)} mL ceiling`));
+      if(drink.safety?.status==='blocked')content.append(node('p','blocked-recipe','DO NOT PREPARE OR SERVE — choose a different roll.'));
+    }
+    const recipe = resultSection(drink.quantityBasis==='per_serving'?'THE THREE ROLLS — ONE SERVING':'THE THREE ROLLS');
     for (const item of drink.finalIngredients) {
       const row = node('div','recipe-row');
       row.append(node('span','roll-badge',item.slot));
       const details = node('div','recipe-details');
       details.append(node('strong','',item.displayName));
       if (item.finalMl !== item.requestedMl) details.append(node('small','',`Requested ${ml(item.requestedMl)} mL · adjusted by the generator`));
-      row.append(details,node('span','recipe-amount',`${ml(item.finalMl)} mL`)); recipe.append(row);
+      row.append(details,node('span','recipe-amount',item.measurementUnit==='drops'?`${item.drops} ${item.drops===1?'drop':'drops'} (~${ml(item.finalMl)} mL)`:`${ml(item.finalMl)} mL`)); recipe.append(row);
     }
     content.append(recipe);
     if (drink.generatorAdditions.length) {
@@ -265,6 +270,12 @@
       const stat = node('div',''); stat.append(node('span','',label),node('strong','',value)); stats.append(stat);
     }
     content.append(stats);
+    if(drink.batch){
+      const batch=resultSection('BATCH FOR TWO IDENTICAL SERVINGS');
+      for(const item of drink.batch.ingredients)batch.append(node('p','addition',describe(item)));
+      for(const item of drink.batch.generatorAdditions)batch.append(node('p','addition',item.kind==='ice'?'Ice (as configured)':describe(item)));
+      batch.append(node('p','addition',`${ml(drink.batch.totalVolumeMl)} mL total · ${ml(drink.batch.pureAlcoholMl)} mL pure alcohol in the batch · split equally between two servings`));content.append(batch);
+    }
     const orders = resultSection('BARTENDER’S ORDERS');
     orders.append(node('p','preparation-method',drink.preparationMethod));
     const steps = node('ol','preparation-steps');
@@ -275,15 +286,16 @@
       drink.warnings.forEach(warning => warnings.append(node('p','',warning))); content.append(warnings);
     }
     const notes = resultSection('GENERATOR NOTES');
-    notes.append(node('p','generator-note','Alcohol estimates use the saved ABVs. Renaming a slot does not change its compatibility profile.'));
+    drink.generatorNotes.forEach(note => notes.append(node('p','generator-note',note)));
     notes.append(node('p','generator-note','Alcohol estimates use the saved ABVs. Renaming a slot does not change its compatibility profile.'));
     content.append(notes);
     $('#pour-next').hidden = Boolean(route.historical);
+    $('#pour-next').textContent=drink.safety?.status==='blocked'?'SKIP THIS ROLL':'POUR NEXT DRINK';
     content.scrollTop = 0;
   }
   $('#pour-next').addEventListener('click', async () => {
     if (!activeDrink || currentRoute.historical) return;
-    if (!await ask('Pour the next drink?', 'Your current selection will be cleared so a new roll can begin. This drink stays in History.', 'POUR NEXT DRINK')) return;
+    if (!await ask(activeDrink.safety?.status==='blocked'?'Skip this blocked roll?':'Pour the next drink?', 'Your current selection will be cleared so a new roll can begin. This drink stays in History.',activeDrink.safety?.status==='blocked'?'SKIP ROLL':'POUR NEXT DRINK')) return;
     try {
       drinks.finish(activeDrink); // Ensure the snapshot exists before releasing the current roll.
       activeDrink = null; selected = []; startupWarning = '';
@@ -318,6 +330,20 @@
       navigate({name:'result',historical:false});
     },
   };
+  const policyForm=$('#serving-form');
+  $('#serving-options').addEventListener('click',()=>{
+    const policy=servingSettings.get();
+    for(const [key,value]of Object.entries(policy)){const input=policyForm.elements.namedItem(key);if(typeof value==='boolean')input.checked=value;else input.value=value;}
+    $('#serving-status').textContent=servingSettings.getWarning();$('#serving-dialog').showModal();
+  });
+  $('#serving-close').addEventListener('click',()=>$('#serving-dialog').close());
+  policyForm.addEventListener('submit',event=>{
+    event.preventDefault();if(!policyForm.reportValidity())return;
+    try{
+      const next={};for(const [key,value]of Object.entries(app.drinkGenerator.defaultPolicy)){const input=policyForm.elements.namedItem(key);next[key]=typeof value==='boolean'?input.checked:Number(input.value);}
+      servingSettings.save(next);$('#serving-dialog').close();
+    }catch(error){$('#serving-status').textContent=error.message;}
+  });
   const initialRoute = parseRoute();
   history.replaceState({d20:true,index:0,route:initialRoute}, '', hashFor(initialRoute));
   showRoute(initialRoute);

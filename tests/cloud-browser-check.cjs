@@ -14,7 +14,7 @@ require('../services/storage.js');require('../services/ingredients.js');
     await context.route('https://game.test/**',async route=>{
       const file=new URL(route.request().url()).pathname.slice(1)||'index.html';
       if(file==='config.js')return route.fulfill({contentType:'text/javascript',body:config});
-      const type=file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream';
+      const type=file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.png')?'image/png':'application/octet-stream';
       try {await route.fulfill({contentType:type,body:await fs.readFile(path.join(root,file))});}catch{await route.fulfill({status:404,body:'missing'});}
     });
     await context.route('https://example.supabase.co/**',async route=>{
@@ -59,7 +59,7 @@ require('../services/storage.js');require('../services/ingredients.js');
     assert.equal(await phone.locator('#result-screen').isVisible(),true);
     offline=false;
     await phone.evaluate(()=>window.dispatchEvent(new Event('online')));
-    await tv.waitForFunction(()=>document.querySelector('#display-stats').textContent.includes('120 mL'));
+    await tv.waitForFunction(()=>document.querySelector('#display-stats').textContent.includes('15 mL per serving'));
     assert.equal(seen.size,4); // register, encounter, clear, encounter.
     await phone.locator('#result-back').click();await phone.locator('#options').click();
     await phone.locator('.ingredient-abv').nth(6).fill('10');await phone.locator('#ingredient-form button[type="submit"]').click();

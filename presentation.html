@@ -18,14 +18,14 @@
     #tavern-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
     #presentation-stage>[hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="presentation.css?v=6">
+  <link rel="stylesheet" href="presentation.css?v=7">
   <script src="config.js" defer></script>
   <script src="services/storage.js" defer></script>
   <script src="services/drink-history.js" defer></script>
   <script src="services/supabase.js" defer></script>
   <script src="services/connection.js" defer></script>
-  <script src="services/presentation-view.js?v=6" defer></script>
-  <script src="presentation.js?v=6" defer></script>
+  <script src="services/presentation-view.js?v=7" defer></script>
+  <script src="presentation.js?v=7" defer></script>
   <script src="pwa.js" defer></script>
 </head>
 <body>
@@ -57,6 +57,7 @@
       <div id="drink-copy" class="drink-copy">
         <div id="drink-copy-content" class="drink-copy-content">
           <h2 id="drink-title" class="drink-title reveal"></h2>
+          <p id="display-safety" class="display-safety" role="alert" hidden></p>
           <p id="drink-summary" class="drink-summary reveal" hidden></p>
           <div class="ingredient-heading reveal"><span class="flourish" aria-hidden="true">◆</span><h3>THE THREE ROLLS</h3></div>
           <ul id="display-ingredients" class="ingredients"></ul>
