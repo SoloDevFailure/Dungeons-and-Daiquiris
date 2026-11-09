@@ -11,7 +11,10 @@
     return {
       key:`drink:${encounter.id || drink.id}`,kind:'drink',
       title:drink.bartenderTitle || 'An unnamed abomination',
-      summary:drink.bartenderSummary || 'Three rolls. Two servings. Questionable decisions.',
+      summary:[
+        'Three rolls. One glass. The tavern accepts no creative responsibility.',
+        'Three rolls. Two servings. Questionable decisions.',
+      ].includes((drink.bartenderSummary || '').trim())?'':(drink.bartenderSummary || ''),
       ingredients:drink.finalIngredients.map(item=>({slot:item.slot,name:item.displayName,amount:`${ml(item.finalMl)} mL`})),
       additions:drink.generatorAdditions.map(item=>item.kind==='ice'?'Ice':`${item.displayName} — ${ml(item.finalMl)} mL`).join(' · '),
       stats:`${ml(drink.totalVolumeMl)} mL total · ${drink.estimatedAbv.toFixed(1)}% estimated ABV · ${encounter.servings || 2} servings, split evenly`,
@@ -78,7 +81,7 @@
       show:model=>{
         stage.dataset.encounter=model.key;
         if(model.kind==='welcome'){requestFit();return;}
-        $('#drink-title').textContent=model.title;$('#drink-summary').textContent=model.summary;
+        $('#drink-title').textContent=model.title;$('#drink-summary').textContent=model.summary;$('#drink-summary').hidden=!model.summary.trim();
         const rows=model.ingredients.map((item,index)=>{
           const row=doc.createElement('li');row.className='ingredient reveal';row.style.setProperty('--row-index',index);
           row.append(line('span','ingredient-roll',item.slot),line('span','ingredient-name',item.name),line('span','ingredient-amount',item.amount));return row;

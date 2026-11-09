@@ -64,3 +64,13 @@ After deployment: verify the existing iPad link still pairs, generate a drink on
 the original phone, wait for its reveal, then advance to welcome. Check that a
 stationary drink does not replay its entrance every second and that refresh restores
 it. Recheck on the actual mirrored TV for its overscan and preferred text size.
+
+## Fixed-frame correction
+
+The HTML now contains the viewport/no-scroll frame itself and uses versioned
+presentation CSS/JS URLs, preventing an older stylesheet from laying out newer
+markup as a scrolling document. The duplicate HTML title, active-drink kicker,
+stock commentary, artwork caption and mock ledger text are removed. Genuine
+descriptions remain. Preparation detail remains accessible without crowding the
+TV copy. Points and bid-range placeholders sit beside server status in the bottom
+strip; scoring is not implemented. Cache release: v6.

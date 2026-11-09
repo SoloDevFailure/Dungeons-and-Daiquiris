@@ -54,3 +54,10 @@ test('long names and fractional mL remain exact rather than being truncated for 
  source.currentEncounter.snapshot.finalIngredients[0].displayName='A'.repeat(100);source.currentEncounter.snapshot.finalIngredients[0].finalMl=0.01;
  const model=D.presentationView.modelFor(source);assert.equal(model.title,source.currentEncounter.snapshot.bartenderTitle);assert.equal(model.ingredients[0].name.length,100);assert.equal(model.ingredients[0].amount,'0.01 mL');
 });
+
+test('stock tagline is suppressed while an actual drink description is preserved',()=>{
+ const source=state();assert.equal(D.presentationView.modelFor(source).summary,'');
+ source.currentEncounter.snapshot.bartenderSummary='A smoky citrus drink with a sharp finish.';
+ assert.equal(D.presentationView.modelFor(source).summary,'A smoky citrus drink with a sharp finish.');
+ source.currentEncounter.snapshot.bartenderSummary='';assert.equal(D.presentationView.modelFor(source).summary,'');
+});
