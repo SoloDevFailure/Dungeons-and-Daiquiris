@@ -19,11 +19,11 @@
     try{app.storage.write(PAIRING_KEY,pairing);}catch{/* URL pairing still works without storage. */}
     const serialized=JSON.stringify(state);
     if(serialized!==lastCached){try{app.storage.write(`dungeons-daiquiris.display.${pairing.session}`,state);lastCached=serialized;}catch{/* Keep live display with full/blocked storage. */}}
-    status('Live · bartender connected · v9');
+    status('Live · bartender connected · v10');
   }
   const loop=app.connection.createLoop({run:poll,interval:1000,retry:1000,onState(state,error){
     if(!connection)return;
-    if(state==='offline')status(error?.status===403||error?.status===401?'Display link unavailable. Copy a fresh link from the host.':'Connection interrupted. Keeping the last display; retrying.');
+    if(state==='offline'){view.disconnect?.();status(error?.status===403||error?.status===401?'Display link unavailable. Copy a fresh link from the host.':'Connection interrupted. Reconnecting.');}
     if(state==='paused')status('Display paused while this page is hidden.');
   }});
   function pair(){

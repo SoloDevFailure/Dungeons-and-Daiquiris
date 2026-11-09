@@ -70,7 +70,7 @@ The browser uses ordered classic scripts rather than ES module imports so direct
 ## Deterministic recipe policy
 
 New drinks use a 90 mL maximum per serving, a 15 mL shot target and a combined
-30 mL spirit/liqueur cap. Difficult mixtures use smaller portions, hot sauce is
+30 mL combined hard-spirit cap, with each hard spirit limited to 15 mL. Difficult mixtures use smaller portions, hot sauce is
 measured in drops, and optional balancing lime comes only from available inventory.
 Water/ice are opt-in pantry extras. Results include explicit two-serving batch
 quantities and preserve all earlier snapshots unchanged. See [serving rules and
@@ -84,7 +84,7 @@ The v1 ingredient list migrates to v2 without deleting the original. Each field 
 
 Run the dependency-free engine/repository suite:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs tests/results.test.cjs
 
 It covers all 1,140 three-slot combinations at default amounts and again with extreme amounts, plus alcohol maths, preparation constraints, migration, snapshot isolation, storage errors and the inactive API hook.
 
@@ -95,3 +95,5 @@ The optional browser check uses Playwright and installed Chrome:
 Install Playwright separately or set `D20_PLAYWRIGHT_PATH` to its module path. `D20_SCREENSHOTS` optionally selects an output folder. It runs offline and checks common phone/desktop viewports, the complete game loop, read-only history, reloads, dirty browser navigation, confirmations and failed storage writes.
 
 A permanent Supabase game, anonymous host authentication, players and read-only display pairing are implemented. See [Phase 1 setup](supabase/README.md). The phone contestant/round/points workflow is implemented; apply the additive gameplay migration before deploying it. See [phone gameplay setup](PHONE-GAMEPLAY.md). OpenAI remains unimplemented.
+
+Award presentations, Finish Game, archived restarts and automatically paged final analytics are described in [game results setup](GAME-RESULTS.md).

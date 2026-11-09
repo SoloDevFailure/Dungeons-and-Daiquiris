@@ -74,6 +74,7 @@
     if(route.name==='welcome'){renderWelcome();$('#welcome-title').focus({preventScroll:true});}
     if(route.name==='players'){renderPlayers();$('#players-title').focus({preventScroll:true});}
     if(route.name==='winners'){renderWinners();$('#winners-title').focus({preventScroll:true});}
+    if(route.name==='main'&&app.gameplay.isFinished(game.get())){navigate({name:'welcome'},true);return;}
     if (route.name === 'main') { renderSelection(); $('#main-title').focus({preventScroll:true}); }
     if (route.name === 'options') { renderEditor(); $('#editor-title').focus({preventScroll:true}); }
     if (route.name === 'history') { renderHistory(); $('#history-title').focus({preventScroll:true}); }
@@ -136,6 +137,7 @@
       slot.setAttribute('aria-label', id ? `${id}: ${slot.title}` : slot.title);
     });
     $('#confirm').disabled = !complete;
+    $('#finish-game').disabled=Boolean(activeDrink)||!game.get().started;
     $('#confirm').textContent = activeDrink ? 'VIEW YOUR DRINK' : 'CONFIRM SELECTION';
     $('#status').textContent = startupWarning || (activeDrink ? 'Your choices are sealed. Your drink is saved.' : complete ? 'Ready to confirm. Tap a number to change.' : selected.length ? `${selected.length} of 3 selected. Tap again to change.` : 'Choose three. Tap again to change.');
   }
@@ -155,6 +157,7 @@
   $('#confirm').addEventListener('click', () => {
     if (activeDrink) { navigate({name:'result',historical:false}); return; }
     if (selected.length !== 3) return;
+    if(app.gameplay.isFinished(game.get())){navigate({name:'welcome'});return;}
     try {
       const result = app.drinkGenerator.generateDrink(selected.map(slot => ingredients.getById(slot)), {inventory:ingredients.getAll(),policy:servingSettings.get()});
       drinks.saveGenerated(result); // Commit history and active result together before locking the UI.
@@ -306,17 +309,17 @@
     content.scrollTop = 0;
   }
   function changed(){app.cloud?.wake?.();}
-  function finishRound(){
+  function finishRound(keepPresentation=false){
     if(!activeDrink)return;
     drinks.finish(activeDrink);activeDrink=null;selected=[];startupWarning='';
     try{game.saveDraft(null);}catch{ /* A stale draft must not prevent the saved round from advancing. */ }
-    app.cloud?.queue('clear',{});navigate({name:'main'},true);
+    if(!keepPresentation)app.cloud?.queue('clear',{});navigate({name:'main'},true);
   }
   $('#pour-next').addEventListener('click',async()=>{
     if(!activeDrink||currentRoute.historical)return;
     try{
       if(app.gameplay.quote(activeDrink).blocked){if(await ask('Skip this roll?','The recipe stays in History. No points will be awarded.','SKIP'))finishRound();return;}
-      if(game.get().awards.some(a=>a.encounterId===activeDrink.id)){finishRound();return;}
+      if(game.get().awards.some(a=>a.encounterId===activeDrink.id)){finishRound(true);return;}
       if(!game.get().started){game.start();changed();}
       navigate({name:'winners'});
     }catch(error){$('#result-status').textContent=error.message;}
@@ -328,8 +331,8 @@
   });
   function renderWelcome(){
     const state=game.get(),ranking=app.gameplay.rankings(state);
-    $('#game-summary').textContent=`${state.players.filter(p=>p.enabled).length} participating · ${state.awards.length} completed rounds`;
-    $('#start-game').textContent=state.started?'RESUME GAME':'START GAME';
+    $('#game-summary').textContent=`${state.players.filter(p=>p.enabled).length} participating · ${app.gameplay.currentAwards(state).length} completed rounds`;
+    $('#start-game').textContent=app.gameplay.isFinished(state)?'NEW GAME':state.started?'RESUME GAME':'START GAME';
     $('#leaderboard').replaceChildren(...ranking.map(p=>{const row=node('div','contestant-row');row.append(node('span','',`${p.name}${p.enabled?'':' · not participating'}`),node('strong','',`${p.points} pts`));return row;}));
     $('#welcome-status').textContent=game.pending().length?'Points and contestants saved on this phone; upload pending.':'';
   }
@@ -373,10 +376,23 @@
     try{
       const current=draft();game.award(activeDrink,current.winners,Number($('#agreed-points').value));changed();
       // Persist the award first. A failed finish/reload can continue without awarding twice.
-      $('#award-dialog').close();finishRound();
+      $('#award-dialog').close();finishRound(true);
     }catch(error){if(!$('#award-dialog').open)navigate({name:'result'},true);$('#award-status').textContent=error.message;$('#result-status').textContent=error.message;}
   });
-  $('#start-game').addEventListener('click',()=>{try{game.start();changed();navigate({name:activeDrink?'result':'main'});}catch(error){$('#welcome-status').textContent=error.message;}});
+  $('#start-game').addEventListener('click',async()=>{
+    try{
+      if(app.gameplay.isFinished(game.get())){
+        if(!await ask('Start a new game?','Current results will be archived. Contestants and ingredients stay saved; the new game begins at zero points.','NEW GAME'))return;
+        game.newGame();if(activeDrink){drinks.finish(activeDrink);activeDrink=null;}selected=[];app.cloud?.queue('clear',{});
+      }else game.start();
+      changed();navigate({name:activeDrink?'result':'main'});
+    }catch(error){$('#welcome-status').textContent=error.message;}
+  });
+  $('#finish-game').addEventListener('click',async()=>{
+    if(activeDrink){$('#status').textContent='Award or skip the current drink before finishing.';return;}
+    if(!await ask('Finish the game?','The iPad will show final rankings and analytics. Your results remain saved.','FINISH GAME'))return;
+    try{game.finish();changed();navigate({name:'welcome'});}catch(error){$('#status').textContent=error.message;}
+  });
   $('#game-home').addEventListener('click',()=>navigate({name:'welcome'}));
   $('#welcome-options').addEventListener('click',()=>navigate({name:'players'}));
   $('#welcome-pair').addEventListener('click',()=>$('#session-open').click());

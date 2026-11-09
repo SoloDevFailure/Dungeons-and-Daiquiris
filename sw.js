@@ -1,6 +1,6 @@
 'use strict';
 // Immutable release URLs keep each page's scripts consistent, even under an older worker.
-const RELEASE='9';
+const RELEASE='10';
 const CACHE_PREFIX='dungeons-daiquiris-shell-';
 const CACHE_NAME=`${CACHE_PREFIX}v${RELEASE}`;
 const ASSETS=[
@@ -8,7 +8,7 @@ const ASSETS=[
   ...['styles.css','presentation.css','config.js','session-ui.js','presentation.js',
     'services/supabase.js','services/session.js','services/connection.js','services/qr.js',
     'services/presentation-view.js','app.js','pwa.js','services/storage.js','services/ingredients.js',
-    'services/drink-generator.js','services/gameplay.js','services/serving-settings.js',
+    'services/drink-generator.js','services/gameplay.js','services/analytics.js','services/serving-settings.js',
     'services/drink-history.js','services/ai-service.js'].map(path=>`./${path}?v=${RELEASE}`),
   './assets/presentation/tavern-backdrop.png','./assets/presentation/three-d20.svg','./assets/presentation/cocktail-placeholder.svg',
   './manifest.webmanifest','./presentation.webmanifest','./icons/apple-touch-icon.png',

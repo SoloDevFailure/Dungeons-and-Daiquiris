@@ -89,7 +89,7 @@
   }
   function presentationLink(state, base = globalThis.location.href) {
     const url = new URL('presentation.html', base);
-    url.searchParams.set('release','9'); // Bypass a previous worker's cached presentation document.
+    url.searchParams.set('release','10'); // Bypass a previous worker's cached presentation document.
     url.hash = new URLSearchParams({session:state.id, view:state.viewToken}).toString();
     return url.href;
   }

@@ -12,7 +12,9 @@
     if(!liquids.every(item=>Number.isFinite(item.finalMl)&&item.finalMl>=0&&Number.isFinite(item.abv)&&item.abv>=0&&item.abv<=100))return false;
     const volume=liquids.reduce((sum,item)=>sum+item.finalMl,0),alcohol=liquids.reduce((sum,item)=>sum+item.finalMl*item.abv/100,0);
     if(!near(volume,drink.totalVolumeMl)||!near(alcohol,drink.pureAlcoholMl)||!near(volume?alcohol/volume*100:0,drink.estimatedAbv))return false;
-    const spirits=drink.finalIngredients.filter(item=>/spirit|liqueur/.test(item.category)||item.overproof||item.tags?.includes('overproof')||item.abv>=20);
+    const corrected=drink.spiritPolicy==='hard_spirits_15_each_30_total';
+    const spirits=drink.finalIngredients.filter(item=>corrected?!['beer','cider','stout','wine'].includes(item.category)&&(/spirit/.test(item.category)||item.overproof||item.tags?.includes('overproof')||item.abv>50||item.abv>=25):/spirit|liqueur/.test(item.category)||item.overproof||item.tags?.includes('overproof')||item.abv>=20);
+    if(corrected&&spirits.some(item=>item.finalMl>15))return false;
     if(!near(spirits.reduce((sum,item)=>sum+item.finalMl,0),drink.spiritVolumeMl))return false;
     if(drink.safety.status==='blocked'&&(drink.safeToServe||drink.preparationMethod!=='Do not prepare or serve'))return false;
     if(drink.safeToServe!==(drink.totalVolumeMl>0&&drink.safety.status!=='blocked'))return false;

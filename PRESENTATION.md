@@ -81,3 +81,8 @@ strip; scoring is not implemented. Cache release: v6.
 New QR and copied links include `?release=9`; session ID and read capability remain in the fragment. All page scripts/styles use `?v=9` and are included in the same offline release cache. Online document loads use the network, falling back to the cached document offline, including QR/tracking-query links. This avoids the plain QR URL retaining an older document while a tracking-query URL loads the new one. Existing links remain valid. No database migration or clearing local data is needed for this correction.
 
 A new pairing fragment in an already-open page switches polling automatically. Responses from the old pairing are ignored. The remembered pairing is updated only after a successful read-only server response, so malformed/denied links cannot destroy a previously working pairing. The footer identifies display v9. No host authentication is sent by the presentation.
+
+
+## Awards and final results (release 10)
+
+Award recipients and exact full/half points are a distinct scene keyed by encounter ID. It stays visible after the phone returns to rolling, and a new current encounter replaces it. Finish Game takes precedence over drink/award state and shows the final analytics pages. Pages rotate every 12 seconds; repeated polling does not reset them. Refresh restores the state from the server/cache. Hidden pages pause report timers, scene motion and polling. A server disconnect leaves the report scene; reconnecting restores it automatically. See GAME-RESULTS.md for the required additive migration and estimate definitions.

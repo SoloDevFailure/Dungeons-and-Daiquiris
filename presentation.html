@@ -18,16 +18,17 @@
     #tavern-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
     #presentation-stage>[hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="presentation.css?v=9">
-  <script src="config.js?v=9" defer></script>
-  <script src="services/storage.js?v=9" defer></script>
-  <script src="services/drink-history.js?v=9" defer></script>
-  <script src="services/gameplay.js?v=9" defer></script>
-  <script src="services/supabase.js?v=9" defer></script>
-  <script src="services/connection.js?v=9" defer></script>
-  <script src="services/presentation-view.js?v=9" defer></script>
-  <script src="presentation.js?v=9" defer></script>
-  <script src="pwa.js?v=9" defer></script>
+  <link rel="stylesheet" href="presentation.css?v=10">
+  <script src="config.js?v=10" defer></script>
+  <script src="services/storage.js?v=10" defer></script>
+  <script src="services/drink-history.js?v=10" defer></script>
+  <script src="services/gameplay.js?v=10" defer></script>
+  <script src="services/analytics.js?v=10" defer></script>
+  <script src="services/supabase.js?v=10" defer></script>
+  <script src="services/connection.js?v=10" defer></script>
+  <script src="services/presentation-view.js?v=10" defer></script>
+  <script src="presentation.js?v=10" defer></script>
+  <script src="pwa.js?v=10" defer></script>
 </head>
 <body>
   <main id="presentation-stage" class="stage" data-suspended="false" data-backdrop="loading" aria-label="Dungeons and Daiquiris television presentation">
@@ -74,6 +75,13 @@
         <img id="drink-artwork" src="assets/presentation/cocktail-placeholder.svg" width="460" height="620" alt="Illustrative cocktail placeholder; not a picture of the generated recipe">
 
       </figure>
+    </section>
+    <section id="award-scene" class="scene award-scene" aria-labelledby="awarded-title" hidden>
+      <div id="award-content" class="award-content"><p class="eyebrow">THE DRINK HAS BEEN CLAIMED</p><h2 id="awarded-title" class="reveal"></h2><p id="awarded-points" class="reveal"></p><div id="awarded-recipients"></div><p class="award-hold">The next abomination is in the bartender's hands.</p></div>
+    </section>
+    <section id="analytics-scene" class="scene analytics-scene" aria-labelledby="analytics-title" hidden>
+      <div id="analytics-content" class="analytics-content"><header><p class="eyebrow">FINAL RESULTS</p><h2 id="analytics-title"></h2><p id="analytics-summary"></p></header>
+      <div class="analytics-columns"><div><h3 id="analytics-page-label"></h3><div id="analytics-rows"></div></div><div id="analytics-stats"></div></div><p id="analytics-note"></p></div>
     </section>
     <footer class="broadcast-footer" aria-label="Points and server connection">
       <div class="points-info"><span id="points-info">POINTS <strong>—</strong></span><span id="bidding-range">BID RANGE <strong>—</strong></span><span id="current-leader" class="leader-slot"></span></div>

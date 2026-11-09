@@ -90,3 +90,4 @@ dialog p{font-size:14px;line-height:1.5;color:#d1c5aa}
 #welcome-status,#players-status,#winners-status{font-size:13px;line-height:1.5;color:#d1c5aa}
 #game-home{min-height:44px}
 @media(max-height:670px){.main-header .subtitle{display:none}}
+.game-actions{display:flex;justify-content:center;gap:8px;margin-top:8px}.game-actions button{flex:1;min-height:44px}#game-home{margin-top:0}

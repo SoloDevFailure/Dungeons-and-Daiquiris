@@ -16,7 +16,7 @@
   const isAcidic = item => item.acidic || item.tags.includes('acidic');
   const isDairy = item => item.dairy || item.tags.includes('dairy');
   const isOverproof = item => item.overproof || item.tags.includes('overproof') || item.abv>50;
-  const isSpirit = item => /spirit|liqueur/.test(item.category) || isOverproof(item) || item.abv>=20;
+  const isSpirit = item => !['beer','cider','stout','wine'].includes(item.category) && (/spirit/.test(item.category) || isOverproof(item) || item.abv>=25);
   const isHot = item => item.heatLevel==='high' || item.tags.includes('hot');
   const isFlavouring = item => item.category==='condiment';
   const amount = item => item.measurementUnit==='drops' ? `${item.displayName} - ${item.drops} ${item.drops===1?'drop':'drops'} (~${item.finalMl} mL)` : `${item.displayName} - ${item.finalMl} mL`;
@@ -93,7 +93,7 @@
     const dropUnits=Math.max(1,Math.round(policy.dropMl*100));
     const flavourCount=rolledIngredients.filter(isFlavouring).length;
     const working=rolledIngredients.map(item=>{
-      let cap=isHot(item)?(flavourCount>=2?1:2)*dropUnits/100:isFlavouring(item)?(item.tags.includes('umami')?1:3):item.category==='citrus'?5:isOverproof(item)?5:isDairy(item)?15:isSpirit(item)?30:90;
+      let cap=isHot(item)?(flavourCount>=2?1:2)*dropUnits/100:isFlavouring(item)?(item.tags.includes('umami')?1:3):item.category==='citrus'?5:isOverproof(item)?5:isDairy(item)?15:isSpirit(item)?15:90;
       const capped=Math.min(item.defaultMl,item.maxGeneratorMl,cap,90);
       let units=Math.floor(capped*100+1e-8);
       if(isHot(item))units=Math.floor(units/dropUnits)*dropUnits;
@@ -106,9 +106,9 @@
     const dairy=initial.some(isDairy),conflict=dairy&&initial.some(isAcidic),overproof=initial.some(isOverproof);
     const spiritCount=initial.filter(isSpirit).length,hot=initial.some(isHot);
     let servingStyle='standard',servingLimitMl=policy.maxServingMl;
-    if(hot||flavourCount>=2||overproof||initialAbv>=30||(spiritCount===3)){
+    if(flavourCount>=2||overproof){
       servingStyle='shot';servingLimitMl=Math.min(servingLimitMl,policy.shotMl);
-    }else if(conflict||flavourCount||initial.some(item=>item.category==='citrus'&&item.units>=300)){
+    }else if(hot||initialAbv>=30||conflict||flavourCount||initial.some(item=>item.category==='citrus'&&item.units>=300)){
       servingStyle='small';servingLimitMl=Math.min(servingLimitMl,policy.smallServingMl);
     }
     let limitUnits=Math.floor(servingLimitMl*100);const additions=[];
@@ -129,8 +129,8 @@
     // not just its originally requested blend, before choosing the final size.
     const compressedTotal=working.reduce((sum,item)=>sum+item.units,0);
     const compressedAbv=compressedTotal?working.reduce((sum,item)=>sum+item.units*item.abv,0)/compressedTotal:0;
-    if(compressedAbv>=30&&servingLimitMl>policy.shotMl){
-      servingStyle='shot';servingLimitMl=Math.min(servingLimitMl,policy.shotMl);limitUnits=Math.floor(servingLimitMl*100);
+    if(compressedAbv>=30&&servingLimitMl>policy.smallServingMl){
+      servingStyle='small';servingLimitMl=Math.min(servingLimitMl,policy.smallServingMl);limitUnits=Math.floor(servingLimitMl*100);
       for(const addition of additions)if(addition.kind==='lime')addition.finalMl=Math.min(addition.finalMl,1);
       addedUnits=additions.reduce((sum,item)=>sum+Math.round(item.finalMl*100),0);
       compress(working,limitUnits-addedUnits);
@@ -164,7 +164,7 @@
     if(blockedReasons.length){warnings.unshift('DO NOT PREPARE OR SERVE: '+blockedReasons.join(' '));prep={method:'Do not prepare or serve',steps:['Do not prepare or consume this roll. Keep the snapshot for the record and choose a different roll.'],iceMode:'none'};}
     if(prep.iceMode!=='none')additions.push({id:'ice',displayName:'Ice',kind:'ice',source:'configured-extra',liquidVolumeMl:0,preparation:prep.iceMode});
     generatorNotes.push(`All quantities are per serving. ${servingLimitMl} mL is a ceiling, not a fill target.`);
-    generatorNotes.push('Spirit/liqueur volume is capped at 30 mL per serving or the lower configured limit. Ice melt is not included.');
+    generatorNotes.push('Each hard spirit is capped at 15 mL; combined hard spirits at 30 mL per serving or the lower configured limit. Beer, cider, wine and low-alcohol liqueurs are excluded. Ice melt is not included.');
     const servingCount=2;
     const batch={servings:servingCount,totalVolumeMl:totalVolumeMl*servingCount,pureAlcoholMl:pureAlcoholMl*servingCount,estimatedAbv,spiritVolumeMl:spiritVolumeMl*servingCount,
       ingredients:finalIngredients.map(item=>({...app.clone(item),finalMl:Math.round(item.finalMl*100*servingCount)/100,...(item.measurementUnit==='drops'?{drops:item.drops*servingCount}:{})})),
@@ -173,7 +173,7 @@
       : overproof ? 'The Last Roll' : spiritCount === 3 ? 'The Bad Decision'
         : actual.some(isCarbonated) ? 'The Questionable Pint' : 'The Natural Twenty';
     return {
-      schemaVersion:2, generatorVersion:'1.1.0',
+      schemaVersion:2, generatorVersion:'1.2.0',spiritPolicy:'hard_spirits_15_each_30_total',
       quantityBasis:'per_serving',servingCount,servingStyle,servingLimitMl,servingPolicy:app.clone(policy),spiritVolumeMl,batch,
       safeToServe,safety:{status:blockedReasons.length?'blocked':totalVolumeMl?'checked':'empty',reasons:blockedReasons},
       id:context.id || globalThis.crypto.randomUUID(), createdAt:context.createdAt || new Date().toISOString(),

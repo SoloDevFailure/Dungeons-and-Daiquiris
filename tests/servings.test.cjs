@@ -5,10 +5,11 @@ const D=globalThis.D20,master=D.ingredients.master;
 function recipe(slots,options={}){return D.drinkGenerator.generateDrink(slots.map(n=>D.clone(master[n-1])),{id:'portion',createdAt:'2026-11-09T00:00:00Z',...options})}
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-8,`${actual} != ${expected}`);
 const memory=()=>{const data=new Map();const driver={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};return {data,driver,storage:D.createStorage(driver)}};
-test('spirit cap includes every spirit and cream liqueur; three-spirit rolls target 15 mL',()=>{
+test('hard spirits have individual 15 mL and combined 30 mL limits; low-alcohol liqueurs are excluded',()=>{
  for(const slots of [[7,8,12],[7,13,15],[1,7,12],[7,8,15]]){
   const r=recipe(slots);assert.ok(r.spiritVolumeMl<=30);assert.ok(r.totalVolumeMl<=90);assert.equal(r.servingCount,2);
-  if(slots.every(n=>/spirit|liqueur/.test(master[n-1].category))){assert.equal(r.servingStyle,'shot');assert.equal(r.totalVolumeMl,15);}
+  for(const item of r.finalIngredients.filter(i=>/spirit/.test(i.category)))assert.ok(item.finalMl<=15);
+  if(slots.every(n=>/spirit/.test(master[n-1].category))){assert.equal(r.servingStyle,'small');assert.equal(r.totalVolumeMl,30);}
  }
  const r=recipe([1,7,12]);assert.equal(r.spiritVolumeMl,30);assert.equal(r.totalVolumeMl,90);
 });
@@ -38,7 +39,7 @@ test('balancing lime must be available, non-alcoholic, enabled, absent from the 
 });
 test('water and ice are opt-in inventory extras, count liquid additions and preserve alcohol maths',()=>{
  const plain=recipe([7,8,12]);assert.equal(plain.generatorAdditions.length,0);
- const r=recipe([7,8,12],{policy:{waterAvailable:true,iceAvailable:true},inventory:master});assert.ok(r.generatorAdditions.some(i=>i.kind==='water'));assert.ok(r.generatorAdditions.some(i=>i.kind==='ice'));assert.ok(r.totalVolumeMl<=15);
+ const r=recipe([7,8,12],{policy:{waterAvailable:true,iceAvailable:true},inventory:master});assert.ok(r.generatorAdditions.some(i=>i.kind==='water'));assert.ok(r.generatorAdditions.some(i=>i.kind==='ice'));assert.ok(r.totalVolumeMl<=30);
  const liquids=[...r.finalIngredients,...r.generatorAdditions.filter(i=>i.kind!=='ice')];const volume=liquids.reduce((sum,i)=>sum+i.finalMl,0),alcohol=liquids.reduce((sum,i)=>sum+i.finalMl*i.abv/100,0);
  near(r.totalVolumeMl,volume);near(r.pureAlcoholMl,alcohol);near(r.estimatedAbv,alcohol/volume*100);
 });
@@ -71,7 +72,7 @@ test('serving settings are persisted separately; hard ceilings cannot be raised 
  repo.save({...repo.get(),maxServingMl:60,shotMl:10,maxSpiritMl:12,iceAvailable:true});
  assert.equal(D.servingSettings.createRepository(m.storage).get().shotMl,10);assert.equal(m.data.get(D.ingredients.key),raw);
  for(const changes of [{maxServingMl:91},{shotMl:16},{maxSpiritMl:31},{dropMl:.015},{smallServingMl:46}])assert.throws(()=>repo.save({...repo.get(),...changes}));
- const r=recipe([7,8,12],{policy:repo.get()});assert.ok(r.totalVolumeMl<=10);assert.ok(r.spiritVolumeMl<=12);
+ const r=recipe([7,8,12],{policy:repo.get()});assert.ok(r.totalVolumeMl<=12);assert.ok(r.spiritVolumeMl<=12);
 });
 test('failed/corrupt serving-setting writes preserve records and the previous settings',()=>{
  const m=memory(),repo=D.servingSettings.createRepository(m.storage);repo.save({...repo.get(),shotMl:10});
@@ -92,15 +93,15 @@ test('new snapshots survive the existing encounter queue and retain visible drop
  const model=D.presentationView.modelFor({currentEncounter:{id:r.id,snapshot:r,servings:2}});assert.match(model.ingredients[0].amount,/1 drop/);assert.match(model.stats,/per serving/);assert.match(model.stats,/30 mL batch/);
 });
 
-test('compressed alcohol-heavy mixtures are reassessed and reduced to shot size',()=>{
- const r=recipe([17,3,7],{inventory:master});assert.equal(r.servingStyle,'shot');assert.ok(r.totalVolumeMl<=15);
+test('compressed alcohol-heavy mixtures stay small without becoming mandatory 15 mL shots',()=>{
+ const r=recipe([17,3,7],{inventory:master});assert.equal(r.servingStyle,'small');assert.ok(r.totalVolumeMl<=30);
  for(let a=1;a<19;a++)for(let b=a+1;b<20;b++)for(let c=b+1;c<21;c++){
-   const result=recipe([a,b,c],{inventory:master});if(result.estimatedAbv>=30)assert.ok(result.totalVolumeMl<=15);
+   const result=recipe([a,b,c],{inventory:master});if(result.estimatedAbv>=30)assert.ok(result.totalVolumeMl<=30);
  }
 });
 
 test('unavailable ice is never mentioned in preparation, and fractional policies retain exact hundredths',()=>{
  const plain=recipe([7,8,12]);assert.ok(!/\bice\b/i.test(plain.preparationSteps.join(' ')));
- const r=recipe([7,8,12],{inventory:master,policy:{shotMl:5.01,waterAvailable:true}});assert.ok(r.totalVolumeMl<=5.01);assert.ok(D.drinkHistory.validDrink(r));
+ const r=recipe([7,8,12],{inventory:master,policy:{smallServingMl:15.01,waterAvailable:true}});assert.ok(r.totalVolumeMl<=15.01);assert.ok(D.drinkHistory.validDrink(r));
  const tiny=recipe([7,8,12],{inventory:master,policy:{maxSpiritMl:.01,waterAvailable:true}});assert.equal(tiny.generatorAdditions.length,0);assert.ok(D.drinkHistory.validDrink(tiny));
 });

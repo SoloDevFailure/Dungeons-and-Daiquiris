@@ -10,22 +10,23 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>Dungeons &amp; Daiquiris</title>
-  <link rel="stylesheet" href="styles.css?v=9">
-  <script src="services/storage.js?v=9" defer></script>
-  <script src="services/ingredients.js?v=9" defer></script>
-  <script src="services/drink-generator.js?v=9" defer></script>
-  <script src="services/serving-settings.js?v=9" defer></script>
-  <script src="services/drink-history.js?v=9" defer></script>
-  <script src="services/gameplay.js?v=9" defer></script>
-  <script src="services/ai-service.js?v=9" defer></script>
-  <script src="config.js?v=9" defer></script>
-  <script src="services/supabase.js?v=9" defer></script>
-  <script src="services/session.js?v=9" defer></script>
-  <script src="services/connection.js?v=9" defer></script>
-  <script src="services/qr.js?v=9" defer></script>
-  <script src="session-ui.js?v=9" defer></script>
-  <script src="app.js?v=9" defer></script>
-  <script src="pwa.js?v=9" defer></script>
+  <link rel="stylesheet" href="styles.css?v=10">
+  <script src="services/storage.js?v=10" defer></script>
+  <script src="services/ingredients.js?v=10" defer></script>
+  <script src="services/drink-generator.js?v=10" defer></script>
+  <script src="services/serving-settings.js?v=10" defer></script>
+  <script src="services/drink-history.js?v=10" defer></script>
+  <script src="services/gameplay.js?v=10" defer></script>
+  <script src="services/analytics.js?v=10" defer></script>
+  <script src="services/ai-service.js?v=10" defer></script>
+  <script src="config.js?v=10" defer></script>
+  <script src="services/supabase.js?v=10" defer></script>
+  <script src="services/session.js?v=10" defer></script>
+  <script src="services/connection.js?v=10" defer></script>
+  <script src="services/qr.js?v=10" defer></script>
+  <script src="session-ui.js?v=10" defer></script>
+  <script src="app.js?v=10" defer></script>
+  <script src="pwa.js?v=10" defer></script>
 </head>
 <body>
   <section id="welcome-screen" class="screen content-screen" aria-labelledby="welcome-title" hidden>
@@ -53,7 +54,7 @@
       <button id="options" class="small-button options-button" type="button">OPTIONS</button>
       <div class="crest" aria-hidden="true"><span>✦</span></div>
       <h1 id="main-title" tabindex="-1">DUNGEONS <span>&amp;</span> DAIQUIRIS</h1>
-      <p class="subtitle">Roll three D20s. Enter the numbers.</p><button id="game-home" class="small-button" type="button">CONTESTANTS &amp; TOTALS</button>
+      <p class="subtitle">Roll three D20s. Enter the numbers.</p><div class="game-actions"><button id="finish-game" class="small-button danger-button" type="button">FINISH GAME</button><button id="game-home" class="small-button" type="button">TOTALS</button></div>
       <button id="session-open" class="connection-indicator" data-connection="connecting" type="button" aria-label="Connecting — pair iPad">&#8226;</button>
     </header>
     <section class="selection" aria-label="Ingredient numbers">
@@ -105,7 +106,7 @@
     <form id="serving-form">
       <label>Standard maximum (15–90 mL)<input name="maxServingMl" type="number" min="15" max="90" step="0.01" required></label>
       <label>Shot target (5–15 mL)<input name="shotMl" type="number" min="5" max="15" step="0.01" required></label>
-      <label>Combined spirits/liqueurs maximum (0–30 mL)<input name="maxSpiritMl" type="number" min="0" max="30" step="0.01" required></label>
+      <label>Combined hard spirits maximum (0–30 mL)<input name="maxSpiritMl" type="number" min="0" max="30" step="0.01" required></label>
       <label>Other difficult rolls maximum (15–45 mL)<input name="smallServingMl" type="number" min="15" max="45" step="0.01" required></label>
       <label>Estimated hot-sauce mL per drop<input name="dropMl" type="number" min="0.01" max="0.1" step="0.01" required></label>
       <label><input name="autoLime" type="checkbox"> Allow small balancing lime additions from slot 18</label>

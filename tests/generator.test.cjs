@@ -31,17 +31,17 @@ test('every default three-slot combination respects volume, alcohol and preparat
 });
 test('mixer compression precedes spirits and equal-priority reductions are shared', () => {
   const r=generate([12,1,16]);
-  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[30,1,59]);
+  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[15,1,74]);
   assert.equal(r.totalVolumeMl,90);
   const beers=generate([3,4,16]);
   assert.deepEqual(beers.finalIngredients.map(i=>i.finalMl),[30,30,30]);
 });
-test('triple spirits become a 15 mL shot without unconfigured extras', () => {
+test('triple spirits share the 30 mL spirit allowance without unconfigured extras', () => {
   const r=generate([7,8,12]);
-  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[5,5,5]);
-  assert.equal(r.generatorAdditions.length,0);assert.equal(r.totalVolumeMl,15);
-  assert.equal(r.pureAlcoholMl,5.875);assert.ok(Math.abs(r.estimatedAbv-39.16666666666667)<1e-9);
-  assert.equal(r.batch.totalVolumeMl,30);assert.equal(r.batch.spiritVolumeMl,30);
+  assert.deepEqual(r.finalIngredients.map(i=>i.finalMl),[10,10,10]);
+  assert.equal(r.generatorAdditions.length,0);assert.equal(r.totalVolumeMl,30);
+  assert.equal(r.pureAlcoholMl,11.75);assert.ok(Math.abs(r.estimatedAbv-39.16666666666667)<1e-9);
+  assert.equal(r.batch.totalVolumeMl,60);assert.equal(r.batch.spiritVolumeMl,60);
 });
 test('overproof, condiments and extreme editor values cannot bypass caps', () => {
   const r=generate([9,7,12],{9:{defaultMl:300},7:{defaultMl:900},12:{defaultMl:1e100}});
