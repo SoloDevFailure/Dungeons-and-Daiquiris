@@ -4,8 +4,10 @@
   const ingredients = app.ingredients.createRepository();
   const drinks = app.drinkHistory.createRepository();
   const servingSettings = app.servingSettings.createRepository();
+  const game = app.gameRepository = app.gameplay.createRepository();
+  try { const cached=app.storage.read(app.sessions.key,null)?.remote;if(!cached?.gameplay)game.importLegacy(cached?.players); } catch { /* Sync reports recovery errors without replacing records. */ }
   const $ = selector => document.querySelector(selector);
-  const screens = {main:$('#main-screen'), options:$('#editor-screen'), history:$('#history-screen'), result:$('#result-screen')};
+  const screens = {main:$('#main-screen'), options:$('#editor-screen'), history:$('#history-screen'), result:$('#result-screen'), welcome:$('#welcome-screen'), players:$('#players-screen'), winners:$('#winners-screen')};
   const grid = $('#number-grid');
   const rows = $('#ingredient-rows');
   const form = $('#ingredient-form');
@@ -63,11 +65,15 @@
     const hash = location.hash.slice(1);
     if (hash.startsWith('history/')) return {name:'result', historical:true, id:decodeURIComponent(hash.slice(8))};
     if (hash === 'drink') return {name:'result', historical:false};
-    return {name:['main','options','history'].includes(hash) ? hash : activeDrink ? 'result' : 'main', historical:false};
+    return {name:['main','options','history','welcome','players','winners'].includes(hash) ? hash : activeDrink ? 'result' : game.get().started ? 'main' : 'welcome', historical:false};
   }
   function showRoute(route) {
+    if(route.name==='winners'&&(!activeDrink||game.get().awards.some(a=>a.encounterId===activeDrink.id)))route={name:activeDrink?'result':'welcome'};
     currentRoute = route;
     Object.entries(screens).forEach(([name, element]) => { element.hidden = name !== route.name; });
+    if(route.name==='welcome'){renderWelcome();$('#welcome-title').focus({preventScroll:true});}
+    if(route.name==='players'){renderPlayers();$('#players-title').focus({preventScroll:true});}
+    if(route.name==='winners'){renderWinners();$('#winners-title').focus({preventScroll:true});}
     if (route.name === 'main') { renderSelection(); $('#main-title').focus({preventScroll:true}); }
     if (route.name === 'options') { renderEditor(); $('#editor-title').focus({preventScroll:true}); }
     if (route.name === 'history') { renderHistory(); $('#history-title').focus({preventScroll:true}); }
@@ -240,6 +246,7 @@
     content.replaceChildren();
     $('#result-status').textContent = '';
     $('#pour-next').hidden = true;
+    $('#skip-drink').hidden=true;
     $('#result-context').textContent = route.historical ? 'FROM THE LEDGER · READ ONLY' : 'SEALED & SAVED';
     $('#result-title').textContent = 'YOUR DRINK';
     let drink;
@@ -290,21 +297,97 @@
     notes.append(node('p','generator-note','Alcohol estimates use the saved ABVs. Renaming a slot does not change its compatibility profile.'));
     content.append(notes);
     $('#pour-next').hidden = Boolean(route.historical);
-    $('#pour-next').textContent=drink.safety?.status==='blocked'?'SKIP THIS ROLL':'POUR NEXT DRINK';
+    const completed=game.get().awards.find(a=>a.encounterId===drink.id),q=app.gameplay.quote(drink);
+    $('#pour-next').textContent=q.blocked?'SKIP THIS ROLL':completed?'NEXT DRINK':'SELECT WINNERS';
+    $('#skip-drink').hidden=Boolean(route.historical)||q.blocked||Boolean(completed);
+    const points=resultSection('AUCTION POINTS');points.append(node('p','addition',q.blocked?'No points: blocked or empty recipe.':`Starting ${q.starting} · allowed ${q.min}–${q.max} per contestant`));
+    if(completed)for(const winner of completed.winners)points.append(node('p','addition',`${winner.name}: ${winner.points} points${winner.multiplier===.5?' (50%)':''}`));
+    content.insertBefore(points,content.firstChild);
     content.scrollTop = 0;
   }
-  $('#pour-next').addEventListener('click', async () => {
-    if (!activeDrink || currentRoute.historical) return;
-    if (!await ask(activeDrink.safety?.status==='blocked'?'Skip this blocked roll?':'Pour the next drink?', 'Your current selection will be cleared so a new roll can begin. This drink stays in History.',activeDrink.safety?.status==='blocked'?'SKIP ROLL':'POUR NEXT DRINK')) return;
-    try {
-      drinks.finish(activeDrink); // Ensure the snapshot exists before releasing the current roll.
-      activeDrink = null; selected = []; startupWarning = '';
-      app.cloud?.queue('clear', {});
-      navigate({name:'main'},true);
-    } catch {
-      $('#result-status').textContent = 'Could not save the reset. Your current drink is still here. Please try again.';
-    }
+  function changed(){app.cloud?.wake?.();}
+  function finishRound(){
+    if(!activeDrink)return;
+    drinks.finish(activeDrink);activeDrink=null;selected=[];startupWarning='';
+    try{game.saveDraft(null);}catch{ /* A stale draft must not prevent the saved round from advancing. */ }
+    app.cloud?.queue('clear',{});navigate({name:'main'},true);
+  }
+  $('#pour-next').addEventListener('click',async()=>{
+    if(!activeDrink||currentRoute.historical)return;
+    try{
+      if(app.gameplay.quote(activeDrink).blocked){if(await ask('Skip this roll?','The recipe stays in History. No points will be awarded.','SKIP'))finishRound();return;}
+      if(game.get().awards.some(a=>a.encounterId===activeDrink.id)){finishRound();return;}
+      if(!game.get().started){game.start();changed();}
+      navigate({name:'winners'});
+    }catch(error){$('#result-status').textContent=error.message;}
   });
+  $('#skip-drink').addEventListener('click',async()=>{
+    if(!activeDrink||currentRoute.historical)return;
+    if(!await ask('Skip without points?','Keep this recipe in History and return to the dice. No contestant earns points.','SKIP'))return;
+    try{finishRound();}catch(error){$('#result-status').textContent=error.message;}
+  });
+  function renderWelcome(){
+    const state=game.get(),ranking=app.gameplay.rankings(state);
+    $('#game-summary').textContent=`${state.players.filter(p=>p.enabled).length} participating · ${state.awards.length} completed rounds`;
+    $('#start-game').textContent=state.started?'RESUME GAME':'START GAME';
+    $('#leaderboard').replaceChildren(...ranking.map(p=>{const row=node('div','contestant-row');row.append(node('span','',`${p.name}${p.enabled?'':' · not participating'}`),node('strong','',`${p.points} pts`));return row;}));
+    $('#welcome-status').textContent=game.pending().length?'Points and contestants saved on this phone; upload pending.':'';
+  }
+  function renderPlayers(){
+    const state=game.get();$('#contestant-list').replaceChildren(...state.players.map(p=>{
+      const label=node('label','contestant-row'),input=node('input');input.type='checkbox';input.checked=p.enabled;
+      input.addEventListener('change',()=>{try{game.setEnabled(p.id,input.checked);changed();$('#players-status').textContent='Saved on this phone.';}catch(error){input.checked=!input.checked;$('#players-status').textContent=error.message;}});
+      label.append(input,node('span','',p.name));return label;
+    }));
+  }
+  function draft(){
+    const saved=game.getDraft();return saved?.encounterId===activeDrink?.id?saved:{encounterId:activeDrink?.id,winners:[],agreedPoints:activeDrink?app.gameplay.quote(activeDrink).starting:0};
+  }
+  function renderWinners(){
+    const state=game.get(),current=draft();
+    current.winners=current.winners.filter(w=>state.players.some(p=>p.id===w.playerId&&p.enabled));game.saveDraft(current);
+    $('#winners-drink').textContent=activeDrink.bartenderTitle;
+    $('#winner-list').replaceChildren(...state.players.filter(p=>p.enabled).map(p=>{
+      const label=node('label','contestant-row'),input=node('input');input.type='checkbox';input.checked=current.winners.some(w=>w.playerId===p.id);input.disabled=current.winners.length>=3&&!input.checked;
+      input.addEventListener('change',()=>{try{const next=draft();next.winners=next.winners.filter(w=>w.playerId!==p.id);if(input.checked)next.winners.push({playerId:p.id,multiplier:1});game.saveDraft(next);renderWinners();}catch(error){$('#winners-status').textContent=error.message;}});
+      label.append(input,node('span','',p.name));return label;
+    }));
+    $('#winners-status').textContent=`${current.winners.length} / 3 chosen`;$('#winners-next').disabled=!current.winners.length;
+  }
+  function renderAwardRecipients(){
+    const current=draft(),state=game.get();$('#award-winners').replaceChildren(...current.winners.map(w=>{
+      const row=node('div','award-recipient'),button=node('button','small-button',w.multiplier===.5?'50% POINTS':'FULL POINTS');button.type='button';button.setAttribute('aria-pressed',String(w.multiplier===.5));button.setAttribute('aria-label',`50% points for ${state.players.find(p=>p.id===w.playerId)?.name}`);
+      button.addEventListener('click',()=>{try{const next=draft(),winner=next.winners.find(i=>i.playerId===w.playerId);winner.multiplier=winner.multiplier===1?.5:1;game.saveDraft(next);renderAwardRecipients();}catch(error){$('#award-status').textContent=error.message;}});
+      row.append(node('span','',state.players.find(p=>p.id===w.playerId)?.name||'Unavailable'),button,node('strong','',`${Number.isFinite(current.agreedPoints)?current.agreedPoints*w.multiplier:0} pts`));return row;
+    }));
+  }
+  $('#winners-next').addEventListener('click',()=>{
+    if(!activeDrink||!draft().winners.length)return;const q=app.gameplay.quote(activeDrink);
+    $('#award-drink').textContent=activeDrink.bartenderTitle;$('#award-range').textContent=`Starting ${q.starting} · allowed ${q.min}–${q.max}. One agreed value, individual half-points penalties.`;
+    const input=$('#agreed-points');input.min=q.min;input.max=q.max;input.value=draft().agreedPoints;$('#award-status').textContent='';renderAwardRecipients();$('#award-dialog').showModal();input.focus();input.select();
+  });
+  $('#agreed-points').addEventListener('input',()=>{try{const current=draft();current.agreedPoints=Number($('#agreed-points').value);game.saveDraft(current);renderAwardRecipients();}catch(error){$('#award-status').textContent=error.message;}});
+  $('#award-cancel').addEventListener('click',()=>$('#award-dialog').close());
+  $('#award-form').addEventListener('submit',event=>{
+    event.preventDefault();if(!activeDrink||!$('#award-form').reportValidity())return;
+    try{
+      const current=draft();game.award(activeDrink,current.winners,Number($('#agreed-points').value));changed();
+      // Persist the award first. A failed finish/reload can continue without awarding twice.
+      $('#award-dialog').close();finishRound();
+    }catch(error){if(!$('#award-dialog').open)navigate({name:'result'},true);$('#award-status').textContent=error.message;$('#result-status').textContent=error.message;}
+  });
+  $('#start-game').addEventListener('click',()=>{try{game.start();changed();navigate({name:activeDrink?'result':'main'});}catch(error){$('#welcome-status').textContent=error.message;}});
+  $('#game-home').addEventListener('click',()=>navigate({name:'welcome'}));
+  $('#welcome-options').addEventListener('click',()=>navigate({name:'players'}));
+  $('#welcome-pair').addEventListener('click',()=>$('#session-open').click());
+  $('#welcome-history').addEventListener('click',()=>navigate({name:'history'}));
+  $('#options-players').addEventListener('click',async()=>{if(await allowDiscard())navigate({name:'players'});});
+  $('#players-ingredients').addEventListener('click',()=>navigate({name:'options'}));
+  $('#players-back').addEventListener('click',()=>back({name:'welcome'}));
+  $('#players-done').addEventListener('click',()=>navigate({name:'welcome'}));
+  $('#winners-back').addEventListener('click',()=>navigate({name:'result'}));
+  $('#contestant-add').addEventListener('submit',event=>{event.preventDefault();try{game.addPlayer($('#contestant-name').value);$('#contestant-name').value='';changed();renderPlayers();$('#players-status').textContent='Contestant added.';}catch(error){$('#players-status').textContent=error.message;}});
+  window.addEventListener('d20-gameplay',()=>{if(currentRoute.name==='welcome')renderWelcome();if(currentRoute.name==='players')renderPlayers();});
   $('#clear-history').addEventListener('click', async () => {
     if (!await ask('Clear drink history?', 'Delete all saved history entries on this device? This cannot be undone. Your active drink, if any, remains available.', 'CLEAR HISTORY')) return;
     try { drinks.clear(); startupWarning = ''; renderHistory(); }

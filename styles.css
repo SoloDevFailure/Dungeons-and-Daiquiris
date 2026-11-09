@@ -79,3 +79,14 @@ dialog p{font-size:14px;line-height:1.5;color:#d1c5aa}
 
 .main-header .crest{visibility:hidden}
 #serving-dialog{max-height:90dvh;overflow-y:auto}#serving-form label{display:block;font-size:13px;line-height:1.5;margin:12px 0}#serving-form input[type=number]{display:block;width:100%;min-height:44px;border:1px solid #86744a80;border-radius:7px;background:#101512;color:#ece2c9;padding:9px;font:16px system-ui}#serving-form input[type=checkbox]{margin-right:8px;width:20px;height:20px;vertical-align:middle}.serving-basis{font-size:12px;color:#d6bc7b;letter-spacing:.05em}.blocked-recipe{font-weight:bold;color:#ffc2ac;background:#522b24;padding:14px;border-radius:8px}
+/* Phone game flow: large touch targets, fixed action footer, scrollable ledger. */
+.option-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.contestant-row{display:flex;align-items:center;gap:12px;min-height:54px;padding:10px 2px;border-bottom:1px solid #86744a40;font-size:16px;text-align:left;overflow-wrap:anywhere}
+.contestant-row input{width:24px;height:24px;flex:none;accent-color:#bda05f}.contestant-row strong{margin-left:auto;white-space:nowrap;color:#e0c992}
+.add-contestant{display:flex;gap:8px;margin:8px 0 16px}.add-contestant input{min-width:0;flex:1}
+#contestant-add{margin-top:20px}#contestant-name,#agreed-points{min-height:48px;padding:10px;font:18px system-ui;color:#ece2c9;border:1px solid #86744a;border-radius:7px;background:#101512}
+#agreed-points{display:block;width:100%;margin:10px 0 20px;font-size:28px}
+#award-dialog{max-height:90dvh;overflow:auto}.award-recipient{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;flex-wrap:wrap}.award-recipient button[aria-pressed=true]{background:#623f25;border-color:#d0b97e}#skip-drink{margin-bottom:10px}#game-home{min-height:34px;margin-top:8px}
+#welcome-status,#players-status,#winners-status{font-size:13px;line-height:1.5;color:#d1c5aa}
+#game-home{min-height:44px}
+@media(max-height:670px){.main-header .subtitle{display:none}}

@@ -16,6 +16,7 @@
   <script src="services/drink-generator.js" defer></script>
   <script src="services/serving-settings.js" defer></script>
   <script src="services/drink-history.js" defer></script>
+  <script src="services/gameplay.js" defer></script>
   <script src="services/ai-service.js" defer></script>
   <script src="config.js" defer></script>
   <script src="services/supabase.js" defer></script>
@@ -27,13 +28,32 @@
   <script src="pwa.js" defer></script>
 </head>
 <body>
+  <section id="welcome-screen" class="screen content-screen" aria-labelledby="welcome-title" hidden>
+    <header><p class="selection-heading">CHRISTMAS POKER · 5 DECEMBER 2026</p><h1 id="welcome-title" tabindex="-1">DUNGEONS &amp; DAIQUIRIS</h1><p class="subtitle">Your evening of questionable decisions.</p></header>
+    <div class="scroll-content"><h2 class="drink-name">The contestants</h2><p id="game-summary"></p><div id="leaderboard" class="leaderboard"></div><p id="welcome-status" role="status"></p></div>
+    <footer><div class="option-tabs"><button id="welcome-options" class="small-button" type="button">OPTIONS</button><button id="welcome-pair" class="small-button" type="button">PAIR iPAD</button><button id="welcome-history" class="small-button" type="button">HISTORY</button></div><button id="start-game" class="confirm" type="button">START GAME</button></footer>
+  </section>
+  <section id="players-screen" class="screen content-screen" aria-labelledby="players-title" hidden>
+    <header><div class="editor-toolbar"><button id="players-back" class="small-button" type="button">BACK</button><button id="players-ingredients" class="small-button" type="button">INGREDIENTS</button></div><h1 id="players-title" tabindex="-1">Participating contestants</h1><p class="subtitle">Uncheck anyone who is not attending.</p></header>
+    <div class="scroll-content"><div id="contestant-list"></div><form id="contestant-add"><label for="contestant-name">Add contestant</label><div class="add-contestant"><input id="contestant-name" maxlength="80" required autocomplete="off"><button class="small-button" type="submit">ADD PLAYER</button></div></form></div>
+    <footer><p id="players-status" role="status"></p><button id="players-done" class="confirm" type="button">DONE</button></footer>
+  </section>
+  <section id="winners-screen" class="screen content-screen" aria-labelledby="winners-title" hidden>
+    <header><div class="editor-toolbar"><button id="winners-back" class="small-button" type="button">BACK TO DRINK</button></div><h1 id="winners-title" tabindex="-1">Who claimed the drink?</h1><p id="winners-drink" class="subtitle"></p></header>
+    <div class="scroll-content"><p>Choose 1–3 contestants. Recipes remain a batch for two: split that batch if three people share it. Do not pour an extra serving.</p><div id="winner-list"></div></div>
+    <footer><p id="winners-status" role="status"></p><button id="winners-next" class="confirm" type="button" disabled>NEXT · AWARD POINTS</button></footer>
+  </section>
+  <dialog id="award-dialog" aria-labelledby="award-title">
+    <h2 id="award-title">Award points</h2><p id="award-drink"></p><p id="award-range"></p>
+    <form id="award-form"><label for="agreed-points">Agreed points for each contestant</label><input id="agreed-points" type="number" inputmode="numeric" pattern="[0-9]*" step="1" required><div id="award-winners"></div><p id="award-status" role="status"></p><div class="dialog-actions"><button id="award-cancel" class="small-button" type="button">BACK</button><button id="complete-round" class="small-button" type="submit">COMPLETE ROUND</button></div></form>
+  </dialog>
   <main id="main-screen" class="screen" aria-label="D20 ingredient selection">
     <header class="main-header">
       <button id="history" class="small-button history-button" type="button">HISTORY</button>
       <button id="options" class="small-button options-button" type="button">OPTIONS</button>
       <div class="crest" aria-hidden="true"><span>✦</span></div>
       <h1 id="main-title" tabindex="-1">DUNGEONS <span>&amp;</span> DAIQUIRIS</h1>
-      <p class="subtitle">Choose Your Ingredients</p>
+      <p class="subtitle">Roll three D20s. Enter the numbers.</p><button id="game-home" class="small-button" type="button">CONTESTANTS &amp; TOTALS</button>
       <button id="session-open" class="connection-indicator" data-connection="connecting" type="button" aria-label="Connecting — pair iPad">&#8226;</button>
     </header>
     <section class="selection" aria-label="Ingredient numbers">
@@ -49,7 +69,7 @@
   <section id="editor-screen" class="screen editor-screen" aria-labelledby="editor-title" hidden>
     <header>
       <div class="editor-toolbar"><button id="back" class="small-button" type="button">← BACK</button><span class="selection-heading">THE ALCHEMIST’S LEDGER</span></div>
-      <button id="serving-options" class="small-button" type="button">SERVING SIZES</button>
+      <div class="option-tabs"><button id="options-players" class="small-button" type="button">CONTESTANTS</button><button id="serving-options" class="small-button" type="button">SERVING SIZES</button></div>
       <h1 id="editor-title" tabindex="-1">Ingredient List</h1>
       <p class="subtitle">Twenty numbers. Your own concoction.</p>
     </header>
@@ -77,7 +97,7 @@
       <h1 id="result-title" tabindex="-1">Your Drink</h1>
     </header>
     <article id="result-content" class="scroll-content"></article>
-    <footer><p id="result-status" role="status" aria-live="polite"></p><button id="pour-next" class="confirm" type="button">POUR NEXT DRINK</button></footer>
+    <footer><button id="skip-drink" class="small-button" type="button">SKIP WITHOUT POINTS</button><p id="result-status" role="status" aria-live="polite"></p><button id="pour-next" class="confirm" type="button">POUR NEXT DRINK</button></footer>
   </section>
   <dialog id="serving-dialog" aria-labelledby="serving-title">
     <h2 id="serving-title">Serving sizes</h2>

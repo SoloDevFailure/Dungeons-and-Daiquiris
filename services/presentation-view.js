@@ -117,7 +117,17 @@
     win.addEventListener('resize',requestFit);motion?.addEventListener?.('change',()=>{if(!suspended){switcher.resume();requestFit();}});
     if(win.ResizeObserver){const observer=new win.ResizeObserver(requestFit);observer.observe(stage);}
     doc.fonts?.ready.then(requestFit);if(suspended)suspend();else requestFit();
-    return {update:(state,options)=>switcher.update(modelFor(state),options),suspend,resume,fit:requestFit};
+    return {update:(state,options)=>{
+      const game=state.gameplay;
+      const drink=state.currentEncounter?.snapshot;
+      const q=drink&&app.gameplay?.quote(drink);
+      $('#points-info').textContent=q&&!q.blocked?`START ${q.starting} PTS`:'POINTS —';
+      $('#bidding-range').textContent=q&&!q.blocked?`BID ${q.min}–${q.max}`:'BID RANGE —';
+      const ranking=game&&app.gameplay?.valid(game)?app.gameplay.rankings(game):[];
+      const leaders=ranking.filter(p=>p.points>0&&p.points===ranking[0]?.points);
+      $('#current-leader').textContent=leaders.length?`${leaders.map(p=>p.name).join(' & ')} · ${leaders[0].points} pts`:'';
+      return switcher.update(modelFor(state),options);
+    },suspend,resume,fit:requestFit};
   }
   app.presentationView={modelFor,createSwitcher,create};
 })();

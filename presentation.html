@@ -18,14 +18,15 @@
     #tavern-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
     #presentation-stage>[hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="presentation.css?v=7">
+  <link rel="stylesheet" href="presentation.css?v=8">
   <script src="config.js" defer></script>
   <script src="services/storage.js" defer></script>
   <script src="services/drink-history.js" defer></script>
+  <script src="services/gameplay.js" defer></script>
   <script src="services/supabase.js" defer></script>
   <script src="services/connection.js" defer></script>
-  <script src="services/presentation-view.js?v=7" defer></script>
-  <script src="presentation.js?v=7" defer></script>
+  <script src="services/presentation-view.js?v=8" defer></script>
+  <script src="presentation.js?v=8" defer></script>
   <script src="pwa.js" defer></script>
 </head>
 <body>
@@ -48,7 +49,7 @@
           <li><span class="rule-number" aria-hidden="true">Ⅱ</span><div><h3>Meet the abomination</h3><p>One questionable cocktail. Two servings.</p></div></li>
           <li><span class="rule-number" aria-hidden="true">Ⅲ</span><div><h3>Know the stakes</h3><p>Each drink gets starting points and a bidding range.</p></div></li>
           <li><span class="rule-number" aria-hidden="true">Ⅳ</span><div><h3>Auction the honour</h3><p>Negotiate from half to double the starting points.</p></div></li>
-          <li><span class="rule-number" aria-hidden="true">Ⅴ</span><div><h3>Claim your serving</h3><p>Up to two drinkers. The same agreed points each.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅴ</span><div><h3>Claim your serving</h3><p>One to three drinkers share the batch. Same agreed points, with individual half-points penalties.</p></div></li>
           <li><span class="rule-number" aria-hidden="true">Ⅵ</span><div><h3>Drink. Score. Win.</h3><p>Drinkers earn the points. Highest total wins the prizes.</p></div></li>
         </ol>
       </div>

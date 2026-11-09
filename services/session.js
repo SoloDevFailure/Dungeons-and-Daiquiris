@@ -42,6 +42,20 @@
         write(state);
         return state;
       },
+      async syncGameplay(game, options = {}) {
+        let state=read();if(!state)return;
+        if(state.remote?.gameplay)game.accept(state.remote.gameplay);
+        else game.importLegacy(state.remote?.players);
+        while(game.pending().length){
+          options.signal?.throwIfAborted();
+          const operation=game.pending()[0];
+          const remote=await client.rpc('d20_gameplay_mutate',{p_session:state.id,p_operation:operation.id,p_revision:operation.state.version-1,p_state:operation.state},true,options);
+          // Idempotent operation IDs survive a lost response. Never rebase conflicting scores.
+          game.acknowledge(operation.id);
+          state=read();state.remote=remote;write(state);
+        }
+        if(state.remote?.gameplay)game.accept(state.remote.gameplay);
+      },
       enqueue(kind, payload) {
         const state = read();
         if (!state) return false;

@@ -40,3 +40,5 @@ h1,h2,h3,p,figure,ol,ul{margin:0}h2,h3{font-family:"Palatino Linotype",Palatino,
 @media(prefers-reduced-motion:reduce){.scene,.scene *{animation:none!important;transition:none!important}.drink-art img{will-change:auto}}
 @supports not (width:1cqw){.stage{font-size:1.25vw}.drink-title{font-size:3.55vw}.drink-copy-content{font-size:1.3vw}.welcome-scene{font-size:1.13vw}}
 .display-safety{color:#ffd2b3;font-weight:700;font-size:.85em;line-height:1.35;letter-spacing:.04em}
+/* Keep long tied-leader names inside the fixed television footer. */
+.points-info{min-width:0;max-width:72%;flex:1}.points-info>span:not(.leader-slot){flex-shrink:0}.leader-slot{min-width:0;overflow:hidden;text-overflow:ellipsis}.connection-status{flex:0 1 28%;min-width:0}

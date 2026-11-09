@@ -52,7 +52,7 @@ clear the original browser data. Cross-origin transfer/sync is not implemented.
 
 ## Local flow
 
-Select exactly three numbers, toggling any selection before confirmation. Confirm generates and saves the drink atomically before presenting it. Back preserves the sealed roll; View Your Drink reopens it. Pour Next Drink requires confirmation and saves the snapshot before resetting. An active drink also survives reloads.
+Start or resume the permanent game, then select exactly three numbers. Confirm generates and saves the drink before presenting it. Back preserves the sealed roll. Select Winners chooses 1–3 contestants; Next opens the shared-points popup with individual 50% penalties. Complete Round saves the award once and advances to the dice. Skip Without Points requires confirmation. Active drinks and award-entry drafts survive reloads. See PHONE-GAMEPLAY.md for setup and the points rule.
 
 Options edits names, requested amounts and ABV. Save returns to the main screen. Both the in-app Back and browser Back protect unsaved edits. History is newest first; entries reopen read-only snapshots. Clear History requires confirmation, retains any active drink, and that active drink is archived again when Pour Next Drink completes.
 
@@ -84,7 +84,7 @@ The v1 ingredient list migrates to v2 without deleting the original. Each field 
 
 Run the dependency-free engine/repository suite:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs
 
 It covers all 1,140 three-slot combinations at default amounts and again with extreme amounts, plus alcohol maths, preparation constraints, migration, snapshot isolation, storage errors and the inactive API hook.
 
@@ -94,4 +94,4 @@ The optional browser check uses Playwright and installed Chrome:
 
 Install Playwright separately or set `D20_PLAYWRIGHT_PATH` to its module path. `D20_SCREENSHOTS` optionally selects an output folder. It runs offline and checks common phone/desktop viewports, the complete game loop, read-only history, reloads, dirty browser navigation, confirmations and failed storage writes.
 
-A permanent Supabase game, anonymous host authentication, players and read-only display pairing are implemented. See [Phase 1 setup](supabase/README.md). OpenAI, auctions and scoring remain unimplemented.
+A permanent Supabase game, anonymous host authentication, players and read-only display pairing are implemented. See [Phase 1 setup](supabase/README.md). The phone contestant/round/points workflow is implemented; apply the additive gameplay migration before deploying it. See [phone gameplay setup](PHONE-GAMEPLAY.md). OpenAI remains unimplemented.
