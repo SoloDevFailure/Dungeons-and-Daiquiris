@@ -1,22 +1,42 @@
-:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101512;color:#ece2c9}
-*{box-sizing:border-box}
-body{margin:0;min-height:100svh;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 15%,#33403299,transparent 65%),#101512;padding:max(30px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))}
-body::before{content:'';position:fixed;inset:16px;border:1px solid #b29a5740;pointer-events:none}
-main{width:min(100%,1100px);text-align:center;padding:24px 0}
-.sigil{display:grid;place-items:center;margin:0 auto 32px;width:88px;height:88px;border:2px solid #bea469;border-radius:22px;font:30px Georgia,serif;color:#e0c992;box-shadow:0 0 70px #bea46918}
-.eyebrow{font-size:clamp(11px,1.5vw,17px);letter-spacing:.26em;color:#b9ab8d}
-h1{font:600 clamp(32px,6vw,78px)/1.2 Georgia,serif;color:#e0c992;margin:20px 0}
-h1 span{color:#9e895b}
-.rule{height:1px;width:min(70%,500px);background:linear-gradient(90deg,transparent,#bea469,transparent);margin:32px auto}
-h2{font:400 clamp(23px,3.2vw,42px)/1.3 Georgia,serif;margin:24px 0}
-.description{font:italic clamp(17px,2.1vw,26px)/1.5 Georgia,serif;color:#d1c5aa}
-.status{font-size:clamp(12px,1.4vw,17px);line-height:1.6;color:#b9ab8d;margin:36px auto 0;max-width:650px}
-@media(max-height:500px){.sigil{width:50px;height:50px;font-size:20px;margin-bottom:16px}.rule{margin:18px auto}h1{margin:12px 0}h2{margin:16px 0}.status{margin-top:18px}}
-[hidden]{display:none!important}
-#encounter{max-width:900px;margin:auto;text-align:left;overflow-wrap:anywhere}
-#drink-title{text-align:center;color:#e0c992;font-size:clamp(28px,4vw,54px)}
-#drink-summary{text-align:center;font:italic 22px/1.4 Georgia,serif}
-#display-ingredients{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-#display-ingredients li{padding:16px;border:1px solid #86744a80;border-radius:8px;font-size:22px}
-#display-stats{text-align:center;color:#e0c992}#display-steps{font-size:18px;line-height:1.6}
-#display-warnings{color:#e1c2a3;font-size:16px;line-height:1.6}
+:root{color-scheme:dark;background:#020906;color:#eee2c5;font-family:"Avenir Next","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden}body{display:grid;place-items:center;background:#020906}
+.stage{position:relative;width:100vw;width:min(100vw,177.77778dvh);height:56.25vw;height:min(100dvh,56.25vw);aspect-ratio:16/9;container-type:size;--copy-scale:1;--welcome-scale:1;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 44%,#164632,#061d15 58%,#020b08);font-size:1.25cqw}
+.backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;z-index:-3;pointer-events:none}
+.content-shade{position:absolute;inset:24% 16% 17%;z-index:-1;background:radial-gradient(ellipse,#00110c55,transparent 72%);pointer-events:none}
+.fallback-title{position:absolute;inset:4% 18% auto;margin:0;text-align:center;color:#e2bd70;font:500 5.1cqw/1.08 "Palatino Linotype",Palatino,"Iowan Old Style",Georgia,serif;letter-spacing:-.035em;text-shadow:0 .15cqw .5cqw #0009}
+.stage[data-backdrop="ready"] .fallback-title{position:absolute;width:1px;height:1px;inset:auto;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.scene{position:absolute;inset:26% 19% 22%;opacity:0;pointer-events:none}
+.scene.is-current{opacity:1}.scene.is-leaving{animation:scene-out 420ms ease-in both}.scene.is-entering{animation:scene-in 650ms ease-out both}
+[hidden]{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+h1,h2,h3,p,figure,ol,ul{margin:0}h2,h3{font-family:"Palatino Linotype",Palatino,"Iowan Old Style",Baskerville,Georgia,serif}
+.eyebrow{font-size:.72em;letter-spacing:.2em;line-height:1.5;color:#d1b16e;font-weight:600}.flourish{color:#c69a47;text-shadow:0 0 .8cqw #cdac6c55}
+/* The same safe interior is used on every viewport, preserving the supplied art. */
+.welcome-scene{inset:27% 18.5% 26%;display:grid;grid-template-columns:.83fr 1.18fr 1.35fr;align-items:center;gap:1.6cqw;font-size:calc(1.13cqw * var(--welcome-scale))}
+.welcome-intro{align-self:center;text-shadow:0 .12cqw .4cqw #000c}.welcome-intro>.eyebrow{font-size:.6em;letter-spacing:.12em;white-space:nowrap;margin-bottom:1.2em}
+.welcome-intro h2{font-weight:500;font-size:2.35em;line-height:1.05;letter-spacing:-.035em;color:#efd79b;margin-bottom:.6em}
+.welcome-tagline{font:1.13em/1.65 "Iowan Old Style",Palatino,Georgia,serif;color:#e1d7bb}.welcome-tagline em{font-weight:400;color:#d2b573}
+.welcome-awaiting{font-size:.7em;line-height:1.65;color:#afa88f;margin-top:1.75em}
+.welcome-dice{align-self:center;min-width:0;transform:translateX(-.4cqw);filter:drop-shadow(0 1cqw 1.6cqw #0007)}.welcome-dice img{width:126%;height:auto;max-height:34cqh;display:block;margin-left:-13%}
+.welcome-dice figcaption{text-align:center;font-size:.65em;letter-spacing:.18em;color:#d7b576;white-space:nowrap;margin-top:.25em}
+.welcome-rules{min-width:0;text-shadow:0 .1cqw .4cqw #000c}.welcome-rules>.eyebrow{font-size:.64em;margin:0 0 1.3em 2.6em}
+.welcome-rules ol{list-style:none;padding:0;display:flex;flex-direction:column;gap:.88em}.welcome-rules li{display:grid;grid-template-columns:1.5em 1fr;gap:.7em;align-items:start}.rule-number{font:1em/1.4 Georgia,serif;color:#d5ad5e;text-align:center}.welcome-rules h3{font-size:.92em;letter-spacing:.035em;color:#eeddb5;font-weight:600;line-height:1.2;margin-bottom:.18em}.welcome-rules p{font-size:.88em;line-height:1.42;color:#c7c8b6}
+/* Drink copy remains unconstrained by boxes; fitting adjusts typography as a unit. */
+.drink-scene{display:grid;grid-template-columns:1.22fr 1fr;grid-template-rows:minmax(0,1fr);align-items:center;gap:2.2cqw}.drink-copy{min-width:0;min-height:0;height:100%;display:flex;align-items:center}.drink-copy-content{width:100%;display:flex;flex-direction:column;gap:.8em;font-size:calc(1.3cqw * var(--copy-scale));text-shadow:0 .14cqw .45cqw #000d;overflow-wrap:anywhere;hyphens:auto}
+.drink-title{font-size:calc(3.55cqw * var(--copy-scale));font-weight:500;line-height:1.03;letter-spacing:-.035em;color:#f2dca7;text-shadow:0 .12cqw .2cqw #000c,0 0 2cqw #d4ab4b12;text-wrap:pretty}
+.drink-summary{font:italic 1.05em/1.45 "Iowan Old Style",Palatino,Georgia,serif;color:#e0d7bc;margin-bottom:.2em}
+.ingredient-heading{display:flex;align-items:center;gap:.7em;margin-top:.2em}.ingredient-heading h3{font-family:inherit;font-size:.61em;letter-spacing:.2em;font-weight:600;color:#d9b66f}
+.ingredients{list-style:none;padding:0;display:flex;flex-direction:column;gap:.52em}.ingredient{display:grid;grid-template-columns:1.4em minmax(0,1fr) auto;align-items:baseline;gap:.65em;font-size:1.06em}.ingredient-roll{color:#b39150;font:italic .71em Georgia,serif;align-self:center}.ingredient-name{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-size:1.08em;line-height:1.18;color:#eee1c3}.ingredient-amount{font-variant-numeric:tabular-nums;white-space:nowrap;color:#e3c180;font-size:.87em}
+.additions{font-size:.78em;line-height:1.45;color:#c5cfb5}.drink-stats{font-size:.7em;line-height:1.5;letter-spacing:.03em;color:#c6bb9b;margin-top:.1em}.preparation-note{font-size:.72em;color:#b7bfa9;line-height:1.35}.drink-warnings{font-size:.6em;line-height:1.45;color:#d3b78d;display:flex;flex-direction:column;gap:.3em}
+.drink-art{position:relative;width:100%;height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;isolation:isolate}.drink-art img{width:100%;height:92%;min-height:0;object-fit:contain;filter:drop-shadow(0 1.5cqw 1.5cqw #0008);animation:glass-float 9s ease-in-out infinite;will-change:transform}.art-halo{position:absolute;inset:8% -5% 0;background:radial-gradient(ellipse,#c1a15115,transparent 67%);z-index:-1;pointer-events:none}.drink-art figcaption{font-size:.54cqw;color:#b9a677;letter-spacing:.2em;margin-top:.7cqw;text-align:center}
+/* Stagger is keyed by the scene coordinator, never by the polling interval. */
+.is-entering .reveal{animation:text-reveal 720ms cubic-bezier(.2,.65,.25,1) both;animation-delay:var(--reveal-delay,80ms)}
+.is-entering .drink-title{--reveal-delay:80ms}.is-entering .drink-summary{--reveal-delay:180ms}.is-entering .ingredient-heading{--reveal-delay:240ms}.is-entering .ingredient{--reveal-delay:calc(280ms + var(--row-index,0)*75ms)}.is-entering .additions{--reveal-delay:470ms}.is-entering .drink-stats{--reveal-delay:520ms}.is-entering .preparation-note,.is-entering .drink-warnings{--reveal-delay:540ms}.is-entering .drink-art{animation:art-reveal 850ms ease-out 160ms both}
+.broadcast-footer{position:absolute;left:20%;right:22%;bottom:12%;height:2.5cqw;display:flex;align-items:center;gap:1.25cqw;min-width:0;background:linear-gradient(90deg,transparent,#061e1455,transparent);text-shadow:0 .1cqw .35cqw #000d;color:#b6af95}.ledger-label{font-size:.56cqw;letter-spacing:.13em;flex:none;color:#c8a460}.ticker-viewport{overflow:hidden;min-width:0;flex:1;font:italic .82cqw/1.4 "Iowan Old Style",Palatino,Georgia,serif}.ticker-viewport p{white-space:nowrap}.leader-slot{flex:0 0 9cqw}
+.connection-status{position:absolute;bottom:8.5%;left:20%;right:22%;font-size:.54cqw;text-align:center;letter-spacing:.035em;line-height:1.4;color:#929d87;text-shadow:0 .1cqw .3cqw #000}
+.stage[data-suspended="true"] .scene,.stage[data-suspended="true"] .scene *{animation-play-state:paused!important}
+@keyframes scene-out{to{opacity:0;transform:translateY(-.3cqw)}}@keyframes scene-in{from{opacity:0}to{opacity:1}}
+@keyframes text-reveal{from{opacity:0;transform:translateY(.65cqw)}to{opacity:1;transform:none}}
+@keyframes art-reveal{from{opacity:0;transform:scale(.955)}to{opacity:1;transform:scale(1)}}
+@keyframes glass-float{0%,100%{transform:translateY(0) rotate(-.25deg)}50%{transform:translateY(-.45cqw) rotate(.25deg)}}
+@media(prefers-reduced-motion:reduce){.scene,.scene *{animation:none!important;transition:none!important}.drink-art img{will-change:auto}}
+@supports not (width:1cqw){.stage{font-size:1.25vw}.drink-title{font-size:3.55vw}.drink-copy-content{font-size:1.3vw}.welcome-scene{font-size:1.13vw}}

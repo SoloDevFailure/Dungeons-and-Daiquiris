@@ -1,10 +1,11 @@
 'use strict';
 // Bump this version whenever shipped assets change. Never touch localStorage.
 const CACHE_PREFIX = 'dungeons-daiquiris-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const ASSETS = [
   './', './index.html', './presentation.html', './styles.css', './presentation.css',
-  './config.js', './session-ui.js', './presentation.js', './services/supabase.js', './services/session.js', './services/connection.js', './services/qr.js',
+  './config.js', './session-ui.js', './presentation.js', './services/supabase.js', './services/session.js', './services/connection.js', './services/qr.js', './services/presentation-view.js',
+  './assets/presentation/tavern-backdrop.png', './assets/presentation/three-d20.svg', './assets/presentation/cocktail-placeholder.svg',
   './app.js', './pwa.js', './manifest.webmanifest', './presentation.webmanifest',
   './services/storage.js', './services/ingredients.js', './services/drink-generator.js',
   './services/drink-history.js', './services/ai-service.js',

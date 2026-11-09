@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#101512">
+  <meta name="theme-color" content="#061b14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="D&D Presentation">
-  <title>Dungeons &amp; Daiquiris — Presentation</title>
+  <title>Dungeons &amp; Daiquiris — The Tavern</title>
   <link rel="manifest" href="presentation.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="presentation.css">
@@ -17,24 +17,61 @@
   <script src="services/drink-history.js" defer></script>
   <script src="services/supabase.js" defer></script>
   <script src="services/connection.js" defer></script>
+  <script src="services/presentation-view.js" defer></script>
   <script src="presentation.js" defer></script>
   <script src="pwa.js" defer></script>
 </head>
 <body>
-  <main>
-    <div class="sigil" aria-hidden="true">D20</div>
-    <p class="eyebrow">THE TAVERN IS OPEN</p>
-    <h1>Dungeons <span>&amp;</span> Daiquiris</h1>
-    <div class="rule" aria-hidden="true"></div>
-    <p id="session-label" class="eyebrow"></p>
-    <h2 id="waiting">Waiting for the first abomination</h2>
-    <p class="description">Three rolls. Two servings. Questionable decisions.</p>
-    <article id="encounter" hidden>
-      <h2 id="drink-title"></h2><p id="drink-summary"></p>
-      <ul id="display-ingredients"></ul><p id="display-stats"></p>
-      <ol id="display-steps"></ol><div id="display-warnings"></div>
-    </article>
-    <p id="display-status" class="status" role="status">Waiting for a session link.</p>
+  <main id="presentation-stage" class="stage" data-suspended="false" data-backdrop="loading" aria-label="Dungeons and Daiquiris television presentation">
+    <img id="tavern-backdrop" class="backdrop" src="assets/presentation/tavern-backdrop.png" width="1672" height="941" alt="" aria-hidden="true" fetchpriority="high">
+    <h1 class="fallback-title">Dungeons <span>&amp;</span> Daiquiris</h1>
+    <p class="sr-only" id="session-label"></p>
+    <div class="content-shade" aria-hidden="true"></div>
+    <section id="waiting" class="scene welcome-scene is-current" aria-labelledby="welcome-title">
+      <div class="welcome-intro">
+        <p class="eyebrow">CHRISTMAS POKER · 5 DECEMBER</p>
+        <h2 id="welcome-title">Welcome to<br>the tavern.</h2>
+        <p class="welcome-tagline">Three rolls.<br>Two servings.<br><em>Questionable decisions.</em></p>
+        <p class="welcome-awaiting">The next abomination<br>is in the bartender's hands.</p>
+      </div>
+      <figure class="welcome-dice"><img src="assets/presentation/three-d20.svg" width="700" height="440" alt="Three emerald and gold D20 dice"><figcaption>LET THE BIDS BEGIN</figcaption></figure>
+      <div class="welcome-rules">
+        <p class="eyebrow">THE RULES OF THE TAVERN</p>
+        <ol>
+          <li><span class="rule-number" aria-hidden="true">Ⅰ</span><div><h3>Roll three D20s</h3><p>Each roll chooses an ingredient.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅱ</span><div><h3>Meet the abomination</h3><p>One questionable cocktail. Two servings.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅲ</span><div><h3>Know the stakes</h3><p>Each drink gets starting points and a bidding range.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅳ</span><div><h3>Auction the honour</h3><p>Negotiate from half to double the starting points.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅴ</span><div><h3>Claim your serving</h3><p>Up to two drinkers. The same agreed points each.</p></div></li>
+          <li><span class="rule-number" aria-hidden="true">Ⅵ</span><div><h3>Drink. Score. Win.</h3><p>Drinkers earn the points. Highest total wins the prizes.</p></div></li>
+        </ol>
+      </div>
+    </section>
+    <section id="encounter" class="scene drink-scene" aria-labelledby="drink-title" hidden>
+      <div id="drink-copy" class="drink-copy">
+        <div id="drink-copy-content" class="drink-copy-content">
+          <p class="eyebrow reveal name-kicker">THE TAVERN PRESENTS</p>
+          <h2 id="drink-title" class="drink-title reveal"></h2>
+          <p id="drink-summary" class="drink-summary reveal"></p>
+          <div class="ingredient-heading reveal"><span class="flourish" aria-hidden="true">◆</span><h3>THE THREE ROLLS</h3></div>
+          <ul id="display-ingredients" class="ingredients"></ul>
+          <p id="display-additions" class="additions reveal"></p>
+          <p id="display-stats" class="drink-stats reveal"></p>
+          <p id="display-method" class="preparation-note reveal"></p>
+          <div id="display-warnings" class="drink-warnings reveal"></div>
+          <ol id="display-steps" class="sr-only"></ol>
+        </div>
+      </div>
+      <figure class="drink-art reveal">
+        <div class="art-halo" aria-hidden="true"></div>
+        <img id="drink-artwork" src="assets/presentation/cocktail-placeholder.svg" width="460" height="620" alt="Illustrative cocktail placeholder; not a picture of the generated recipe">
+        <figcaption id="artwork-caption">AN ABOMINATION AWAITS</figcaption>
+      </figure>
+    </section>
+    <footer class="broadcast-footer" aria-label="Future drink-history ticker area">
+      <span class="ledger-label">THE TAVERN LEDGER</span><div id="history-ticker" class="ticker-viewport"><p>Tonight's tales are still being written.</p></div><span id="current-leader" class="leader-slot" aria-label="Reserved for the future points leader"></span>
+    </footer>
+    <p id="display-status" class="connection-status" role="status" aria-live="polite">Waiting for the phone's read-only pairing link.</p>
   </main>
 </body>
 </html>

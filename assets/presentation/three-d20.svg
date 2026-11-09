@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 440" role="img" aria-label="Three emerald and gold twenty-sided dice">
+<defs>
+ <linearGradient id="edge" x2=".8" y2="1"><stop stop-color="#ffe1a0"/><stop offset=".4" stop-color="#c78a35"/><stop offset="1" stop-color="#775026"/></linearGradient>
+ <radialGradient id="face"><stop stop-color="#234b3b"/><stop offset="1" stop-color="#071e17"/></radialGradient>
+ <radialGradient id="glow"><stop stop-color="#d0a455" stop-opacity=".3"/><stop offset="1" stop-color="#d0a455" stop-opacity="0"/></radialGradient>
+ <filter id="shadow"><feGaussianBlur stdDeviation="13"/></filter>
+ <g id="die">
+  <path d="M0-133 115-65 115 65 0 133-115 65-115-65Z" fill="url(#face)" stroke="url(#edge)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M0-133 65-37 115-65M65-37 115 65 0 77-115 65-65-37-115-65M-65-37 0-133M-65-37 65-37 0 77-65-37M0 77 0 133M-115 65-65-37M115 65 65-37" fill="none" stroke="url(#edge)" stroke-width="2.7" stroke-linejoin="round"/>
+  <path d="M-65-37H65L0 77Z" fill="#32634b" fill-opacity=".23"/>
+  <path d="M0-133 65-37H-65Z" fill="#fff1bb" fill-opacity=".1"/>
+  <text x="0" y="22" fill="#f1d596" text-anchor="middle" font-family="Palatino Linotype,Georgia,serif" font-size="56">20</text>
+  <text x="0" y="-65" fill="#c99f58" text-anchor="middle" font-family="Georgia,serif" font-size="26">8</text>
+  <text x="80" y="48" fill="#bd9555" text-anchor="middle" font-family="Georgia,serif" font-size="25" transform="rotate(-30 80 48)">12</text>
+  <text x="-80" y="48" fill="#bd9555" text-anchor="middle" font-family="Georgia,serif" font-size="25" transform="rotate(30 -80 48)">3</text>
+ </g>
+</defs>
+<ellipse cx="350" cy="325" rx="300" ry="105" fill="url(#glow)"/>
+<ellipse cx="350" cy="361" rx="255" ry="22" fill="#000" opacity=".65" filter="url(#shadow)"/>
+<use href="#die" transform="translate(186 183) rotate(-17) scale(.87)"/>
+<use href="#die" transform="translate(514 178) rotate(17) scale(.87)"/>
+<use href="#die" transform="translate(350 248) rotate(-5) scale(1.12)"/>
+</svg>

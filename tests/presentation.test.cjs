@@ -1,24 +1,30 @@
 'use strict';
 const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
-require('../services/storage.js');require('../services/connection.js');require('../services/drink-history.js');require('../services/ingredients.js');require('../services/drink-generator.js');
+require('../services/storage.js');require('../services/connection.js');require('../services/drink-history.js');require('../services/ingredients.js');require('../services/drink-generator.js');require('../services/presentation-view.js');
 const D=globalThis.D20;
 class Element {
-  constructor(){this.textContent='';this.children=[];this.hidden=false;}
+  constructor(){
+    this.textContent='';this.children=[];this.hidden=false;this.dataset={};this.attributes={};
+    this.style={setProperty:()=>{}};this.classList={add:()=>{},remove:()=>{}};
+  }
+  setAttribute(name,value){this.attributes[name]=value}
+  getAttribute(name){return this.attributes[name]??null}
+  addEventListener(){}
   append(item){this.children.push(item)}
   replaceChildren(...items){this.children=items}
 }
 async function settle(){for(let i=0;i<20;i++)await Promise.resolve()}
-function connectionFor(document,timers=[]){return {createLoop:options=>D.connection.createLoop({...options,document,window:{addEventListener:()=>{}},navigator:{onLine:true},setTimer:fn=>timers.push(fn),clearTimer:()=>{}})}}
+function connectionFor(document,timers=[]){return {createLoop:options=>D.connection.createLoop({...options,document,window:{addEventListener:()=>{},matchMedia:()=>({matches:true})},navigator:{onLine:true},setTimer:fn=>timers.push(fn),clearTimer:()=>{}})}}
 test('presentation polls without overlap, retains cached encounter through outages and resumes after clear',async()=>{
   const elements=new Map();const data=new Map();const timers=[];let requests=0,fail=false,hold=false,resume;
   const storage=D.createStorage({getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)});
   const snapshot=D.drinkGenerator.generateDrink(D.ingredients.master.slice(0,3));
   let state={id:'10000000-0000-4000-8000-000000000001',name:'Poker',revision:1,currentEncounter:{id:snapshot.id,snapshot,servings:2}};
   const document={hidden:false,querySelector:s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)},createElement:()=>new Element(),addEventListener:()=>{}};
-  const sandbox={D20:{connection:connectionFor(document,timers),storage,drinkHistory:D.drinkHistory,supabase:{validateConfig:()=>{},createClient:()=>({rpc:async(name,p,host)=>{
+  const sandbox={D20:{presentationView:D.presentationView,connection:connectionFor(document,timers),storage,drinkHistory:D.drinkHistory,supabase:{validateConfig:()=>{},createClient:()=>({rpc:async(name,p,host)=>{
     assert.equal(name,'d20_presentation');assert.equal(host,false);assert.equal(p.p_view_token,'a'.repeat(64));requests++;
     if(hold)await new Promise(resolve=>resume=resolve);if(fail)throw new Error('offline');return state;
-  }})}},D20_CONFIG:{supabaseUrl:"https://example.supabase.co"},document,location:{hash:`#session=${state.id}&view=${'a'.repeat(64)}`},URLSearchParams,Date,setInterval:fn=>timers.push(fn),window:{addEventListener:()=>{}}};
+  }})}},D20_CONFIG:{supabaseUrl:"https://example.supabase.co"},document,location:{hash:`#session=${state.id}&view=${'a'.repeat(64)}`},URLSearchParams,Date,setInterval:fn=>timers.push(fn),window:{addEventListener:()=>{},matchMedia:()=>({matches:true})}};
   const run=()=>vm.runInNewContext(fs.readFileSync(require.resolve('../presentation.js'),'utf8'),sandbox);
   run();await settle();assert.equal(elements.get('#encounter').hidden,false);assert.equal(elements.get('#drink-title').textContent,snapshot.bartenderTitle);
   fail=true;timers[0]();await settle();assert.match(elements.get('#display-status').textContent,/Connection interrupted/);assert.equal(elements.get('#encounter').hidden,false);
@@ -32,7 +38,7 @@ test('presentation polls without overlap, retains cached encounter through outag
 test('presentation still goes live when device storage cannot be written',async()=>{
   const elements=new Map();let requests=0;
   const document={hidden:false,querySelector:s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s)},createElement:()=>new Element(),addEventListener:()=>{}};
-  const sandbox={D20:{connection:connectionFor(document),storage:{read:()=>{throw Error('blocked')},write:()=>{throw Error('blocked')}},drinkHistory:D.drinkHistory,supabase:{validateConfig:()=>{},createClient:()=>({rpc:async()=>{requests++;return {name:'Poker',currentEncounter:null}}})}},D20_CONFIG:{supabaseUrl:'https://example.supabase.co'},document,location:{hash:`#session=10000000-0000-4000-8000-000000000001&view=${'a'.repeat(64)}`},URLSearchParams,Date,setInterval:()=>{},window:{addEventListener:()=>{}}};
+  const sandbox={D20:{presentationView:D.presentationView,connection:connectionFor(document),storage:{read:()=>{throw Error('blocked')},write:()=>{throw Error('blocked')}},drinkHistory:D.drinkHistory,supabase:{validateConfig:()=>{},createClient:()=>({rpc:async()=>{requests++;return {name:'Poker',currentEncounter:null}}})}},D20_CONFIG:{supabaseUrl:'https://example.supabase.co'},document,location:{hash:`#session=10000000-0000-4000-8000-000000000001&view=${'a'.repeat(64)}`},URLSearchParams,Date,setInterval:()=>{},window:{addEventListener:()=>{},matchMedia:()=>({matches:true})}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../presentation.js'),'utf8'),sandbox);await settle();
   assert.equal(requests,1);assert.match(elements.get('#display-status').textContent,/Live/);
 });
