@@ -87,7 +87,7 @@ test('old saved quantities/names survive adding ABV; ABV edits change alcohol ma
 });
 test('display link carries only a read capability in its fragment',()=>{
   const link=new URL(D.sessions.presentationLink({id:'session',viewToken:'read-token',refresh_token:'never-share'},'https://example.com/game/index.html#drink'));
-  assert.equal(link.pathname,'/game/presentation.html');assert.equal(link.search,'');assert.equal(link.hash,'#session=session&view=read-token');
+  assert.equal(link.pathname,'/game/presentation.html');assert.equal(link.search,'?release=9');assert.equal(link.hash,'#session=session&view=read-token');
   assert.ok(!link.href.includes('never-share'));
 });
 

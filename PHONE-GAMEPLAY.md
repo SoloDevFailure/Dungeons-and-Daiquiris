@@ -5,7 +5,7 @@
 1. In Supabase open **Dungeons and Daiquiris → SQL Editor → New query**.
 2. Paste and run the entire `supabase/migrations/202611090001_phone_gameplay.sql` file once. The two earlier migrations must already be applied; do not rerun them. The new migration is transactional and additive. It does not create another session, delete anything, or reset scores, recipes or settings.
 3. Commit the changed files and push via GitHub Desktop. Wait for the Pages workflow to succeed.
-4. Close all app windows and browser tabs on each phone/iPad, then reopen to activate offline cache v8. Do not clear browser/site data or reinstall: preserve the anonymous host identity and pairing.
+4. Close all app windows and browser tabs on each phone/iPad, then reopen to activate offline cache v9. Do not clear browser/site data or reinstall: preserve the anonymous host identity and pairing.
 5. Start/resume on the original host phone. Use Options → Contestants to enable/disable players or add a name. Generate a drink, Select Winners, choose 1–3, Next, enter points, optionally select individual 50% penalties, then Complete Round. Confirm totals and that the iPad returns to welcome for the next roll.
 
 SQL has been prepared for the existing schema but requires execution in the Supabase dashboard. Local tests/mock sync do not prove the migration has been applied or validate the live database. No privileged credentials are needed in the app. If the migration is missing, recipe uploads continue first, while gameplay remains saved locally and retries; the connection panel reports the RPC error.
@@ -47,7 +47,7 @@ The iPad shows starting/bidding points and the current point leader (ties includ
 
 Run:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs
     node scripts/build.cjs
 
 The gameplay tests cover default/legacy players, additions, disabling, duplicate names, start/resume, points/range math, 1–3 winners, individual half points, duplicate award rejection, drafts, storage failure, remote restoration, response-loss retries and version conflicts. Browser QA used an isolated local origin with cloud configuration disabled, preserving the real game's data.

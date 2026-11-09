@@ -42,3 +42,20 @@ test('presentation still goes live when device storage cannot be written',async(
   vm.runInNewContext(fs.readFileSync(require.resolve('../presentation.js'),'utf8'),sandbox);await settle();
   assert.equal(requests,1);assert.match(elements.get('#display-status').textContent,/Live/);
 });
+
+test('a newly scanned fragment re-pairs an open display; late responses cannot overwrite the new encounter',async()=>{
+ const document=new EventTarget(),window=new EventTarget(),timers=new Map(),elements=new Map(),updates=[],requests=[];let timer=0;
+ document.hidden=false;document.querySelector=s=>{if(!elements.has(s))elements.set(s,new Element());return elements.get(s);};
+ const storage=D.createStorage({getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)}),data=new Map();
+ const first={session:'10000000-0000-4000-8000-000000000001',view:'a'.repeat(64)},second={session:'10000000-0000-4000-8000-000000000002',view:'b'.repeat(64)};
+ storage.write('dungeons-daiquiris.display-link.v1',first);
+ const location={hash:`#session=${first.session}&view=${first.view}`};
+ const sandbox={D20:{storage,presentationView:{create:()=>({update:state=>updates.push(state)})},supabase:{validateConfig(){},createClient:()=>({rpc:(name,p,host)=>{assert.equal(host,false);return new Promise(resolve=>requests.push({p,resolve}));}})},connection:{createLoop:options=>D.connection.createLoop({...options,document,window,navigator:{onLine:true},setTimer:(fn,delay)=>{timers.set(++timer,{fn,delay});return timer;},clearTimer:id=>timers.delete(id)})}},D20_CONFIG:{supabaseUrl:'https://example.supabase.co'},document,window,location,URLSearchParams};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../presentation.js'),'utf8'),sandbox);assert.equal(requests.length,1);
+ location.hash=`#session=${second.session}&view=${second.view}`;window.dispatchEvent(new Event('hashchange'));
+ requests[0].resolve({id:first.session,currentEncounter:{id:'stale'}});await settle();assert.equal(updates.some(s=>s.currentEncounter?.id==='stale'),false);
+ assert.deepEqual(storage.read('dungeons-daiquiris.display-link.v1'),first,'pairing is not replaced before server verification');
+ const pending=[...timers.values()].at(-1);pending.fn();assert.equal(requests[1].p.p_session,second.session);
+ requests[1].resolve({id:second.session,currentEncounter:{id:'latest'}});await settle();assert.equal(updates.at(-1).currentEncounter.id,'latest');assert.deepEqual(storage.read('dungeons-daiquiris.display-link.v1'),second);
+ location.hash='#session=broken';window.dispatchEvent(new Event('hashchange'));assert.deepEqual(storage.read('dungeons-daiquiris.display-link.v1'),second);assert.match(elements.get('#display-status').textContent,/incomplete/);
+});

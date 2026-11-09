@@ -74,3 +74,10 @@ stock commentary, artwork caption and mock ledger text are removed. Genuine
 descriptions remain. Preparation detail remains accessible without crowding the
 TV copy. Points and bid-range placeholders sit beside server status in the bottom
 strip; scoring is not implemented. Cache release: v6.
+
+
+## Pairing/cache correction (release 9)
+
+New QR and copied links include `?release=9`; session ID and read capability remain in the fragment. All page scripts/styles use `?v=9` and are included in the same offline release cache. Online document loads use the network, falling back to the cached document offline, including QR/tracking-query links. This avoids the plain QR URL retaining an older document while a tracking-query URL loads the new one. Existing links remain valid. No database migration or clearing local data is needed for this correction.
+
+A new pairing fragment in an already-open page switches polling automatically. Responses from the old pairing are ignored. The remembered pairing is updated only after a successful read-only server response, so malformed/denied links cannot destroy a previously working pairing. The footer identifies display v9. No host authentication is sent by the presentation.
