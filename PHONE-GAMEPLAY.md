@@ -47,7 +47,7 @@ The iPad shows starting/bidding points and the current point leader (ties includ
 
 Run:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs tests/results.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs tests/results.test.cjs tests/install.test.cjs
     node scripts/build.cjs
 
 The gameplay tests cover default/legacy players, additions, disabling, duplicate names, start/resume, points/range math, 1–3 winners, individual half points, duplicate award rejection, drafts, storage failure, remote restoration, response-loss retries and version conflicts. Browser QA used an isolated local origin with cloud configuration disabled, preserving the real game's data.

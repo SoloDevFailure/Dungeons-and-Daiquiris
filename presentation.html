@@ -18,17 +18,18 @@
     #tavern-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
     #presentation-stage>[hidden]{display:none!important}
   </style>
-  <link rel="stylesheet" href="presentation.css?v=10">
-  <script src="config.js?v=10" defer></script>
-  <script src="services/storage.js?v=10" defer></script>
-  <script src="services/drink-history.js?v=10" defer></script>
-  <script src="services/gameplay.js?v=10" defer></script>
-  <script src="services/analytics.js?v=10" defer></script>
-  <script src="services/supabase.js?v=10" defer></script>
-  <script src="services/connection.js?v=10" defer></script>
-  <script src="services/presentation-view.js?v=10" defer></script>
-  <script src="presentation.js?v=10" defer></script>
-  <script src="pwa.js?v=10" defer></script>
+  <link rel="stylesheet" href="presentation.css?v=11">
+  <script src="config.js?v=11" defer></script>
+  <script src="services/storage.js?v=11" defer></script>
+  <script src="services/display-pairing.js?v=11" defer></script>
+  <script src="services/drink-history.js?v=11" defer></script>
+  <script src="services/gameplay.js?v=11" defer></script>
+  <script src="services/analytics.js?v=11" defer></script>
+  <script src="services/supabase.js?v=11" defer></script>
+  <script src="services/connection.js?v=11" defer></script>
+  <script src="services/presentation-view.js?v=11" defer></script>
+  <script src="presentation.js?v=11" defer></script>
+  <script src="pwa.js?v=11" defer></script>
 </head>
 <body>
   <main id="presentation-stage" class="stage" data-suspended="false" data-backdrop="loading" aria-label="Dungeons and Daiquiris television presentation">
@@ -87,6 +88,13 @@
       <div class="points-info"><span id="points-info">POINTS <strong>—</strong></span><span id="bidding-range">BID RANGE <strong>—</strong></span><span id="current-leader" class="leader-slot"></span></div>
       <p id="display-status" class="connection-status" role="status" aria-live="polite">Waiting for the phone's read-only pairing link.</p>
     </footer>
+    <button id="display-pair-open" type="button" aria-label="Pair or change presentation connection">PAIR DISPLAY</button>
   </main>
+  <dialog id="display-pair-dialog" aria-labelledby="display-pair-title">
+    <h2 id="display-pair-title">Pair this iPad display</h2>
+    <p>The home-screen app needs its own pairing. Copy the presentation link from the phone and paste it here once.</p>
+    <form id="display-pair-form"><label for="display-pair-url">Read-only presentation link</label><input id="display-pair-url" type="url" required autocomplete="off" autocapitalize="off" spellcheck="false"><p id="display-pair-error" role="status"></p><button type="submit">CONNECT DISPLAY</button><button id="display-pair-close" type="button">CLOSE</button></form>
+    <p id="display-install-help">For a new installation, connect from the QR link first, then use Add to Home Screen.</p>
+  </dialog>
 </body>
 </html>

@@ -39,3 +39,12 @@ test('one-second presentation interval and frozen-page suspension',async()=>{
   document.dispatchEvent(new Event('freeze'));assert.equal(timers.size,0);loop.wake();await settle();assert.equal(calls,1);
   document.dispatchEvent(new Event('resume'));await settle();assert.equal(calls,2);loop.stop();
 });
+
+test('a foreground visibility event recovers standalone pages even when resume/pageshow was omitted',async()=>{
+ let calls=0;const h=harness(async()=>{calls++});h.loop.start();await settle();
+ h.window.dispatchEvent(new Event('pagehide'));assert.equal(h.timers.size,0);
+ h.document.hidden=false;h.document.dispatchEvent(new Event('visibilitychange'));await settle();assert.equal(calls,2);assert.equal(h.timers.size,1);
+ h.document.dispatchEvent(new Event('freeze'));assert.equal(h.timers.size,0);
+ h.document.dispatchEvent(new Event('visibilitychange'));await settle();assert.equal(calls,3);assert.equal(h.timers.size,1);
+ h.document.hidden=true;h.document.dispatchEvent(new Event('visibilitychange'));h.loop.wake();await settle();assert.equal(calls,3);assert.equal(h.timers.size,0);h.loop.stop();
+});

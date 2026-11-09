@@ -38,6 +38,12 @@
         unsent.shift();app.storage.write(LOCAL_OUTBOX,unsent);
       }
       await repository.flush(options);
+      const shared=repository.get()?.remote?.config;
+      const upgraded=app.ingredients?.upgradeRum(shared);
+      if(shared&&JSON.stringify(shared)!==JSON.stringify(upgraded)){
+        const backup='dungeons-daiquiris.shared-ingredients.before-kraken.v1';if(app.storage.read(backup,null)===null)app.storage.write(backup,shared);
+        repository.enqueue('config',upgraded);await repository.flush(options);
+      }
       if(app.gameRepository){await repository.syncGameplay(app.gameRepository,options);window.dispatchEvent(new Event('d20-gameplay'));}
     },
     onState(next,error){status=next;if(error)lastError=error.message;else if(next==='connected')lastError='';render();},

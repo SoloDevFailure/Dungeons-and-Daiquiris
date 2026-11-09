@@ -44,7 +44,7 @@ test('triple spirits share the 30 mL spirit allowance without unconfigured extra
   assert.equal(r.batch.totalVolumeMl,60);assert.equal(r.batch.spiritVolumeMl,60);
 });
 test('overproof, condiments and extreme editor values cannot bypass caps', () => {
-  const r=generate([9,7,12],{9:{defaultMl:300},7:{defaultMl:900},12:{defaultMl:1e100}});
+  const r=generate([9,7,12],{9:{defaultMl:300,abv:75.5},7:{defaultMl:900},12:{defaultMl:1e100}});
   assert.ok(r.finalIngredients[0].finalMl<=5);
   assert.ok(r.totalVolumeMl<=90);
   assert.equal(r.finalIngredients[0].abv,75.5);
@@ -96,13 +96,13 @@ test('editable ABV persists, fixed caps stay protected, and old defaults migrate
   const reloaded=D.ingredients.createRepository(mem.storage);
   assert.equal(reloaded.getById(9).defaultMl,999);
   assert.equal(reloaded.getById(9).abv,0);
-  assert.equal(reloaded.getById(9).maxGeneratorMl,5);
+  assert.equal(reloaded.getById(9).maxGeneratorMl,15);
   const legacy=[['Coke',100],['Lemonade',100],['Peroni',100],['Great Northern',100],['XXXX Gold',100],['Cider',100],['Vodka',30],['Gin',30],['White Rum',30],['Tequila',30],['Bourbon',30],["Custom whiskey",45],['Spiced Rum',30],['Red Wine',60],['Baileys',30],['Guinness',100],['Worcestershire Sauce',15],['Lime Juice',20],['Tomato Sauce',15],['Hot Sauce',10]].map(([name,amountMl],i)=>({id:i+1,name,amountMl}));
   const old=memory(); old.storage.write('dungeons-daiquiris.ingredients.v1',legacy);
   const migrated=D.ingredients.createRepository(old.storage);
   assert.equal(migrated.getById(1).displayName,'Coca-Cola'); assert.equal(migrated.getById(1).defaultMl,80);
   assert.equal(migrated.getById(12).displayName,'Custom whiskey'); assert.equal(migrated.getById(12).defaultMl,45);
-  assert.equal(migrated.getById(9).displayName,'151 Rum'); assert.equal(migrated.getById(9).defaultMl,15);
+  assert.equal(migrated.getById(9).displayName,'Kraken Black Spiced Rum'); assert.equal(migrated.getById(9).defaultMl,15);
 });
 test('history preserves snapshots, ordering, active state and reset independently of ingredient changes', () => {
   const mem=memory(); const repo=D.drinkHistory.createRepository(mem.storage);

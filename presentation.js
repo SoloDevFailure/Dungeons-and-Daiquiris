@@ -5,7 +5,7 @@
   function status(message){const element=$('#display-status');if(element.textContent!==message)element.textContent=message;}
   const view=app.presentationView.create({document,window});
   const valid=item=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(item?.session||'')&&/^[0-9a-f]{64}$/.test(item?.view||'');
-  let connection=null,generation=0,lastCached='';
+  let connection=null,generation=0,lastCached='',pairingRequested=false;
   let client;
   try{if(!globalThis.D20_CONFIG?.supabaseUrl)throw new Error('Supabase is not configured yet.');app.supabase.validateConfig(D20_CONFIG);client=app.supabase.createClient(D20_CONFIG);}
   catch(error){status(error.message);return;}
@@ -16,10 +16,12 @@
     // A late response from a previous link or suspended page must not paint stale data.
     if(current!==generation||options.signal?.aborted)return;
     view.update(state);
+    app.pwa?.setPresentationPairing(pairing);
+    if(pairingRequested){$('#display-pair-dialog')?.close?.();pairingRequested=false;}
     try{app.storage.write(PAIRING_KEY,pairing);}catch{/* URL pairing still works without storage. */}
     const serialized=JSON.stringify(state);
     if(serialized!==lastCached){try{app.storage.write(`dungeons-daiquiris.display.${pairing.session}`,state);lastCached=serialized;}catch{/* Keep live display with full/blocked storage. */}}
-    status('Live · bartender connected · v10');
+    status('Live · bartender connected · v11');
   }
   const loop=app.connection.createLoop({run:poll,interval:1000,retry:1000,onState(state,error){
     if(!connection)return;
@@ -34,14 +36,24 @@
       if(!explicit){try{next=app.storage.read(PAIRING_KEY,null);}catch{/* Ask for a link. */}}
       if(!valid(next))throw new Error(explicit?'This display link is incomplete or invalid. Copy the full link from the phone.':"Open the read-only iPad link from the phone's pairing panel.");
       if(connection?.session===next.session&&connection?.view===next.view){loop.wake();return;}
-      generation++;connection=next;lastCached='';
+      generation++;connection=next;lastCached='';pairingRequested=true;
       // Hide a different game's cached scene until this pairing has been verified.
       view.update({currentEncounter:null},{immediate:true});
       try{const cached=app.storage.read(`dungeons-daiquiris.display.${next.session}`,null);if(cached)view.update(cached,{immediate:true});}catch{/* Live polling can recover. */}
       status('Connecting to the bartender.');
       loop.wake();
-    }catch(error){generation++;connection=null;status(error.message);}
+    }catch(error){generation++;connection=null;status(error.message);$('#display-pair-dialog')?.showModal?.();}
   }
+  $('#display-pair-open')?.addEventListener('click',()=>$('#display-pair-dialog').showModal());
+  $('#display-pair-close')?.addEventListener('click',()=>$('#display-pair-dialog').close());
+  $('#display-pair-form')?.addEventListener('submit',event=>{
+    event.preventDefault();
+    try{
+      const next=app.displayPairing.fromLink($('#display-pair-url').value,location.href);
+      const url=app.displayPairing.startURL(next,location.href);
+      history.replaceState(null,'',url);pair();$('#display-pair-error').textContent='Connecting…';
+    }catch(error){$('#display-pair-error').textContent=error.message;}
+  });
   window.addEventListener('hashchange',pair);
   pair();loop.start();
 })();

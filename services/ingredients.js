@@ -20,7 +20,7 @@
     definition(6, 'Cider', 80, 4.5, 'cider', ['fruity', 'acidic', 'carbonated']),
     definition(7, 'Vodka', 30, 37.5, 'spirit', ['neutral'], { productName: 'Smirnoff Red-style vodka', maxGeneratorMl: 30 }),
     definition(8, 'Bombay Sapphire', 30, 40, 'spirit', ['gin', 'botanical'], { brand: 'Bombay Sapphire', maxGeneratorMl: 30 }),
-    definition(9, '151 Rum', 15, 75.5, 'overproof spirit', ['rum', 'overproof', 'high-alcohol', 'high-impact'], { maxGeneratorMl: 5 }),
+    definition(9, 'Kraken Black Spiced Rum', 15, 40, 'spirit', ['rum', 'spiced'], { brand:'The Kraken', productName:'The Kraken Black Spiced Rum (40% reference ABV)', maxGeneratorMl:15 }),
     definition(10, 'Tequila', 30, 38, 'spirit', ['tequila', 'agave'], { productName: 'Jose Cuervo Especial Silver-style tequila', maxGeneratorMl: 30 }),
     definition(11, 'Jim Beam', 30, 37, 'spirit', ['bourbon', 'whiskey', 'oak'], { brand: 'Jim Beam', productName: 'Jim Beam White', maxGeneratorMl: 30 }),
     definition(12, "Jack Daniel's", 30, 40, 'spirit', ['whiskey', 'oak'], { brand: "Jack Daniel's", productName: "Jack Daniel's Old No. 7", maxGeneratorMl: 30 }),
@@ -50,6 +50,10 @@
       Number.isFinite(item.defaultMl) && item.defaultMl >= 0 &&
       (item.abv === undefined || (Number.isFinite(item.abv) && item.abv >= 0 && item.abv <= 100)));
   }
+  function upgradeRum(items){
+    if(!Array.isArray(items))return items;
+    return items.map(item=>item?.slot===9&&item.displayName?.trim().toLowerCase()==='151 rum'?{...item,...master[8],defaultMl:item.defaultMl,abv:item.abv===undefined||item.abv===75.5?40:item.abv}:item);
+  }
   function createIngredientRepository(storage = app.storage) {
     let config = master.map(editable);
     let warning = '';
@@ -72,7 +76,14 @@
       }
       if (saved !== null) {
         if (!validConfig(saved)) throw new Error('Invalid configuration');
-        config = saved.map(editable);
+        const upgraded=upgradeRum(saved);
+        if(JSON.stringify(upgraded)!==JSON.stringify(saved)){
+          try{
+            const backup='dungeons-daiquiris.ingredients.before-kraken.v1';if(storage.read(backup,null)===null)storage.write(backup,saved);
+            storage.write(KEY,upgraded.map(editable));
+          }catch{warning='Kraken is loaded, but the ingredient upgrade could not be saved. Save Options again when device storage is available.';}
+        }
+        config = upgraded.map(editable);
       }
     } catch {
       warning = 'Saved settings could not be loaded. Defaults are shown; the original data has not been overwritten.';
@@ -83,13 +94,13 @@
       getWarning: () => warning,
       save(items) {
         if (!validConfig(items)) throw new Error('Enter a name and a non-negative amount and ABV from 0 to 100 for every ingredient.');
-        const next = items.map(item => ({...editable(item), displayName:item.displayName.trim()}));
+        const next = upgradeRum(items).map(item => ({...editable(item), displayName:item.displayName.trim()}));
         storage.write(KEY, next);
         config = next;
         warning = '';
       },
     };
   }
-  app.ingredients = { master, key: KEY, createRepository: createIngredientRepository };
+  app.ingredients = { upgradeRum, master, key: KEY, createRepository: createIngredientRepository };
 })();
 

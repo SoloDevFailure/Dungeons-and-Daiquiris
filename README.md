@@ -84,7 +84,7 @@ The v1 ingredient list migrates to v2 without deleting the original. Each field 
 
 Run the dependency-free engine/repository suite:
 
-    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs tests/results.test.cjs
+    node --test tests/generator.test.cjs tests/session.test.cjs tests/presentation.test.cjs tests/connection.test.cjs tests/qr.test.cjs tests/session-ui.test.cjs tests/presentation-view.test.cjs tests/servings.test.cjs tests/gameplay.test.cjs tests/pwa.test.cjs tests/results.test.cjs tests/install.test.cjs
 
 It covers all 1,140 three-slot combinations at default amounts and again with extreme amounts, plus alcohol maths, preparation constraints, migration, snapshot isolation, storage errors and the inactive API hook.
 
@@ -97,3 +97,5 @@ Install Playwright separately or set `D20_PLAYWRIGHT_PATH` to its module path. `
 A permanent Supabase game, anonymous host authentication, players and read-only display pairing are implemented. See [Phase 1 setup](supabase/README.md). The phone contestant/round/points workflow is implemented; apply the additive gameplay migration before deploying it. See [phone gameplay setup](PHONE-GAMEPLAY.md). OpenAI remains unimplemented.
 
 Award presentations, Finish Game, archived restarts and automatically paged final analytics are described in [game results setup](GAME-RESULTS.md).
+
+For Home Screen pairing recovery and the retired 151-to-Kraken preset migration, see [iPad installation](IPAD-INSTALL.md).

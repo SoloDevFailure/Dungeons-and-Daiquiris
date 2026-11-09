@@ -23,7 +23,11 @@
       }
     }
     function wake(){if(paused()){pause();return;}void tick();}
-    const visibility=()=>paused()?pause():wake();
+    const visibility=()=>{
+      // A visible page is running again even if the OS omitted pageshow/resume.
+      if(!doc.hidden){pageHidden=false;frozen=false;}
+      paused()?pause():wake();
+    };
     const offline=()=>{cancelTimer();active?.abort();onState('offline');};
     const pagehide=()=>{pageHidden=true;pause();};
     const pageshow=()=>{const returning=pageHidden;pageHidden=false;if(returning)visibility();};

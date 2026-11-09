@@ -86,3 +86,8 @@ A new pairing fragment in an already-open page switches polling automatically. R
 ## Awards and final results (release 10)
 
 Award recipients and exact full/half points are a distinct scene keyed by encounter ID. It stays visible after the phone returns to rolling, and a new current encounter replaces it. Finish Game takes precedence over drink/award state and shows the final analytics pages. Pages rotate every 12 seconds; repeated polling does not reset them. Refresh restores the state from the server/cache. Hidden pages pause report timers, scene motion and polling. A server disconnect leaves the report scene; reconnecting restores it automatically. See GAME-RESULTS.md for the required additive migration and estimate definitions.
+
+
+## Installed iPad launch (release 11)
+
+The display now supports pairing inside the installed app and personalised same-origin install manifests with a capability-bearing start URL. Safari local storage is not assumed to transfer into the Home Screen container. Foreground visibility also recovers stale suspension flags. See IPAD-INSTALL.md for deployment and device checks. No database change is needed for this correction.
